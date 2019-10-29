@@ -1,7 +1,7 @@
 bld*/
 build*/
 cmake_build*/
-dependencies*/
+#dependencies*/
 CMakeFiles/
 stk-editor/
 .vscode/
