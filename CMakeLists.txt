@@ -615,6 +615,12 @@ if(NOT SERVER_ONLY)
         graphics_utils)
 endif()
 
+set(CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/lib/libtorch)
+
+find_package(Torch REQUIRED)
+
+target_link_libraries(supertuxkart "${TORCH_LIBRARIES}")
+
 if(UNIX AND NOT APPLE)
     if(USE_LIBBFD)
         target_link_libraries(supertuxkart ${LIBBFD_LIBRARIES})

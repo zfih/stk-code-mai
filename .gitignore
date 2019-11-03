@@ -7,6 +7,9 @@ stk-editor/
 .vscode/
 .idea*/
 
+cmake-build-debug*/
+lib/libtorch*/
+
 .config/
 supertuxkart-64
 make*.bat
