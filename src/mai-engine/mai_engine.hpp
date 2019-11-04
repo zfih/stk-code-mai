@@ -5,7 +5,7 @@
 #ifndef SUPERTUXKART_MAI_ENGINE_HPP
 #define SUPERTUXKART_MAI_ENGINE_HPP
 
-#include <torch>
+#include <torch/torch.h>
 
 
 class mai_engine {
