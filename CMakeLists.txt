@@ -621,6 +621,15 @@ find_package(Torch REQUIRED)
 
 target_link_libraries(supertuxkart "${TORCH_LIBRARIES}")
 
+if (MSVC)
+  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+  add_custom_command(TARGET supertuxkart
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TORCH_DLLS}
+                     $<TARGET_FILE_DIR:supertuxkart>)
+endif (MSVC)
+
 if(UNIX AND NOT APPLE)
     if(USE_LIBBFD)
         target_link_libraries(supertuxkart ${LIBBFD_LIBRARIES})
