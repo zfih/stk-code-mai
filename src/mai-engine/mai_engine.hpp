@@ -7,14 +7,18 @@
 
 #include <torch/torch.h>
 #include "modes/world.hpp"
+#include "game_state.hpp"
 
 class World;
-
 
 class MAIEngine {
 private:
 	static MAIEngine *m_mai_engine;
 	World *m_world;
+
+	GameState *m_game_state;
+	std::vector<GameState> m_game_states;
+    StateManager *m_state_manager;
 
 public:
 	MAIEngine();

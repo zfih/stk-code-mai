@@ -10,6 +10,8 @@ MAIEngine::MAIEngine()
 {
 	m_world = World::getWorld();
 	m_mai_engine = this;
+	m_state_manager = StateManager::get();
+	m_state_manager->getGameState();
 }
 
 MAIEngine::~MAIEngine()
