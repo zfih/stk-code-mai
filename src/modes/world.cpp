@@ -478,6 +478,13 @@ std::shared_ptr<AbstractKart> World::createKart
         }
         else
         {
+            /*AIBaseController* ai = NULL;
+            if (race_manager->isBattleMode())
+                ai = new BattleAI(new_kart.get());
+            else
+                ai = new SkiddingAI(new_kart.get());
+            controller = new NetworkAIController(new_kart.get(),
+                                                 local_player_id, ai);*/
             controller = new LocalPlayerController(new_kart.get(),
                 local_player_id, handicap);
             const PlayerProfile* p = StateManager::get()
