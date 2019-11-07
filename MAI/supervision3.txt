@@ -1,0 +1,8 @@
+Reward function: Initial -> just beat tracks
+
+For next: 
+- No graphics mode
+- Design state, input output and reward function.
+- Why did and didn't we do things.
+- POC of some initial algorithm
+- Try to keep away from x,y,z so we don't overlearn a single level
