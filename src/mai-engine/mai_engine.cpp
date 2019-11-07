@@ -12,6 +12,7 @@ MAIEngine::MAIEngine()
 	m_mai_engine = this;
 	m_state_manager = StateManager::get();
 	m_state_manager->getGameState();
+	m_mai_model = new MAIModelTest(0); // TODO: GO AWAY FROM TEST MODEL!
 }
 
 MAIEngine::~MAIEngine()
@@ -24,7 +25,7 @@ MAIEngine::~MAIEngine()
 
 PlayerAction MAIEngine::getAction()
 {
-	return PlayerAction::PA_BRAKE; // tmp return
+	return m_mai_model->getAction();
 }
 
 MAIEngine* MAIEngine::getMAIEngine()

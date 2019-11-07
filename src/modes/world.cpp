@@ -18,6 +18,8 @@
 
 #include "modes/world.hpp"
 
+#include "mai-engine/mai_controller.hpp"
+
 #include "audio/music_manager.hpp"
 #include "audio/sfx_base.hpp"
 #include "audio/sfx_manager.hpp"
@@ -485,8 +487,17 @@ std::shared_ptr<AbstractKart> World::createKart
                 ai = new SkiddingAI(new_kart.get());
             controller = new NetworkAIController(new_kart.get(),
                                                  local_player_id, ai);*/
-            controller = new LocalPlayerController(new_kart.get(),
-                local_player_id, handicap);
+			if(true)
+			{
+				controller = new MAIController(new_kart.get(),
+					local_player_id, handicap);
+			}
+			else
+			{
+				controller = new LocalPlayerController(new_kart.get(),
+					local_player_id, handicap);
+			}
+
             const PlayerProfile* p = StateManager::get()
                 ->getActivePlayer(local_player_id)->getConstProfile();
             if (p && p->getDefaultKartColor() > 0.0f)
