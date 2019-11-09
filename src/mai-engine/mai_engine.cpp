@@ -9,6 +9,8 @@ MAIEngine *MAIEngine::m_mai_engine = nullptr;
 MAIEngine::MAIEngine()
 {
 	m_world = World::getWorld();
+	m_game_state = new GameState;
+	m_game_states.emplace_back(&m_game_state);
 	m_mai_engine = this;
 	m_state_manager = StateManager::get();
 	m_state_manager->getGameState();
@@ -26,6 +28,19 @@ MAIEngine::~MAIEngine()
 PlayerAction MAIEngine::getAction()
 {
 	return m_mai_model->getAction();
+}
+
+void MAIEngine::update(){ // TODO: DO NOT CALL YET!
+    m_game_state->update();
+}
+
+void MAIEngine::saveState(){
+    m_game_states.push_back(m_game_state->copyGameState());
+}
+
+void MAIEngine::setStateAsCurrent(int id){
+    m_game_states[id].makeStateCurrentState();
+    m_game_state = &m_game_states[id];
 }
 
 MAIEngine* MAIEngine::getMAIEngine()

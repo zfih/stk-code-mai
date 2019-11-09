@@ -19,6 +19,7 @@ private:
 
 	GameState *m_game_state;
 	std::vector<GameState> m_game_states;
+
     StateManager *m_state_manager;
 
 	MAIModel *m_mai_model;
@@ -29,6 +30,12 @@ public:
 
 	PlayerAction getAction();
 	static MAIEngine *getMAIEngine();
+
+    void update();
+
+    void saveState();
+
+    void setStateAsCurrent(int id);
 };
 
 #endif //SUPERTUXKART_MAI_ENGINE_HPP

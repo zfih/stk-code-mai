@@ -57,7 +57,7 @@ void GameState::reset() {
     m_last_saved_time.clear();
 }
 
-void GameState::update(int ticks) {
+void GameState::update() {
     if (m_incorrect_replay || m_complete_replay) return;
 
     m_world = World::getWorld();
@@ -250,7 +250,11 @@ void GameState::update(int ticks) {
 void GameState::makeStateCurrentState() {
     World::setWorld(m_world);
 
-    // TODO: Set saved state as
+    // TODO: Set current state to this state
+}
+
+GameState GameState::copyGameState(){
+    return GameState(*this);
 }
 
 int GameState::enumToCode(Attachment::AttachmentType type)

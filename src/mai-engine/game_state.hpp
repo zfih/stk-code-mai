@@ -123,11 +123,13 @@ public: // everything is public, this isn't pretty, but convenient.
 
     void init();
     void reset();
-    void update(int ticks);
+    void update();
     void makeStateCurrentState();
 
     int enumToCode(Attachment::AttachmentType type);
     int enumToCode(PowerupManager::PowerupType type);
+
+    GameState copyGameState();
 };
 
 
