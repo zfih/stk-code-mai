@@ -433,6 +433,11 @@ public:
     // ------------------------------------------------------------------------
     /** Returns the number of powerups. */
     virtual int getNumPowerup() const = 0;
+
+    // MAI
+    virtual void setNumPowerUp(int num) const = 0;
+    // MAI
+
     // ------------------------------------------------------------------------
     /** Returns a points to this kart's graphical effects. */
     virtual KartGFX* getKartGFX() = 0;

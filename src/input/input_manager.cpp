@@ -135,6 +135,7 @@ void InputManager::handleStaticAction(int key, int value)
     }
 
     // TODO: move debug shortcuts to Debug::handleStaticAction
+    AbstractKart* kart = world->getLocalPlayerKart(0);
     switch (key)
     {
 #ifdef DEBUG
@@ -171,12 +172,23 @@ void InputManager::handleStaticAction(int key, int value)
         case IRR_KEY_SHIFT:
             shift_is_pressed = value!=0; break;
 
+        case IRR_KEY_Y:
+            if (kart == NULL) break;
+
+            kart->getController()->action(PA_TEST_1, 0, false);
+            break;
+
+        case IRR_KEY_U:
+            if (kart == NULL) break;
+
+            kart->getController()->action(PA_TEST_2, 0, false);
+            break;
+
         // Flying up and down
         case IRR_KEY_I:
         {
             if (!world || !UserConfigParams::m_artist_debug_mode) break;
 
-            AbstractKart* kart = world->getLocalPlayerKart(0);
             if (kart == NULL) break;
 
             kart->flyUp();
@@ -701,6 +713,10 @@ void InputManager::dispatchInput(Input::InputType type, int deviceID,
                 GUIEngine::ModalDialog::onEnterPressed();
             }
         }
+        // MAI
+        if (button == IRR_KEY_Y) action = PA_TEST_1;
+        if (button == IRR_KEY_U) action = PA_TEST_2;
+        // MAI
 
         if (action != PA_BEFORE_FIRST)
         {
