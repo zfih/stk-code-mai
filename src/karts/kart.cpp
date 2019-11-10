@@ -3425,6 +3425,11 @@ const video::SColor& Kart::getColor() const
 bool Kart::isVisible() const
 {
     return m_node && m_node->isVisible();
-} // isVisible
+}
+
+void Kart::setNumPowerUp(int num) const {
+    m_powerup->set(m_powerup->getType(), num);
+}
+// isVisible
 
 /* EOF */

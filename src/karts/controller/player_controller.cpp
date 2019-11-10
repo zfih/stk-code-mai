@@ -42,6 +42,7 @@
 #include "utils/translation.hpp"
 
 #include <cstdlib>
+#include <iostream>
 
 PlayerController::PlayerController(AbstractKart *kart)
                 : Controller(kart)

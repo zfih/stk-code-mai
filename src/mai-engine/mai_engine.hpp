@@ -8,6 +8,7 @@
 #include <torch/torch.h>
 #include "modes/world.hpp"
 #include "game_state.hpp"
+#include "mai_modeltest.hpp"
 
 class World;
 
@@ -17,8 +18,12 @@ private:
 	World *m_world;
 
 	GameState *m_game_state;
-	std::vector<GameState> m_game_states;
+	std::vector<GameState*> m_game_states;
+	int m_game_state_count;
+
     StateManager *m_state_manager;
+
+	MAIModel *m_mai_model;
 
 public:
 	MAIEngine();
@@ -27,6 +32,11 @@ public:
 	PlayerAction getAction();
 	static MAIEngine *getMAIEngine();
 
+    void update();
+
+    void saveState();
+
+    void setStateAsCurrent(int id);
 };
 
 #endif //SUPERTUXKART_MAI_ENGINE_HPP

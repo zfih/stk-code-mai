@@ -9,9 +9,12 @@ MAIEngine *MAIEngine::m_mai_engine = nullptr;
 MAIEngine::MAIEngine()
 {
 	m_world = World::getWorld();
+	m_game_state = new GameState(m_world);
 	m_mai_engine = this;
 	m_state_manager = StateManager::get();
 	m_state_manager->getGameState();
+	m_mai_model = new MAIModelTest(0); // TODO: GO AWAY FROM TEST MODEL!
+	m_game_state_count = 0;
 }
 
 MAIEngine::~MAIEngine()
@@ -24,7 +27,22 @@ MAIEngine::~MAIEngine()
 
 PlayerAction MAIEngine::getAction()
 {
-	return PlayerAction::PA_BRAKE; // tmp return
+	return m_mai_model->getAction();
+}
+
+void MAIEngine::update(){
+    m_game_state->update();
+}
+
+void MAIEngine::saveState(){
+    GameState state = m_game_state->copyGameState();
+    m_game_states.push_back(&state);
+    m_game_state_count++;
+}
+
+void MAIEngine::setStateAsCurrent(int id){
+    m_game_states[m_game_state_count-1]->makeStateCurrentState();
+    m_game_state = m_game_states[m_game_state_count-1];
 }
 
 MAIEngine* MAIEngine::getMAIEngine()

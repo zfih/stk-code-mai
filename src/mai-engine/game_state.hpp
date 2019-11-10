@@ -39,7 +39,7 @@ public: // everything is public, this isn't pretty, but convenient.
         /** The suspension length of 4 wheels at a certain time. */
         float               m_suspension_length[4];
         /** The skidding state */
-        int                 m_skidding_state;
+        Skidding::SkidState m_skidding_state;
     };   // PhysicInfo
 
     // ------------------------------------------------------------------------
@@ -50,13 +50,13 @@ public: // everything is public, this isn't pretty, but convenient.
             4 = swatter ; 5 = bubblegum
             This is necessary so replay files are not broken if the
             game internal attachment format/ordering is changed. */
-        int                 m_attachment;
+        Attachment::AttachmentType m_attachment;
         /** The nitro amount at a certain time. */
         float               m_nitro_amount;
         /** The number of items at a certain time. */
         int                 m_item_amount;
         /** The type of item at a certain time. */
-        int                 m_item_type;
+        PowerupManager::PowerupType m_item_type;
         /** Used to store mode-specific values : eggs in egg-hunt,
             number of lives in battle-mode. */
         int                 m_special_value;
@@ -117,16 +117,19 @@ public: // everything is public, this isn't pretty, but convenient.
 
 
     // functions
-    GameState();
+    GameState(World *world);
     GameState(const GameState &state);
     ~GameState();
 
     void init();
     void reset();
-    void update(int ticks);
+    void update();
     void makeStateCurrentState();
 
+    GameState copyGameState();
+
     int enumToCode(Attachment::AttachmentType type);
+
     int enumToCode(PowerupManager::PowerupType type);
 };
 

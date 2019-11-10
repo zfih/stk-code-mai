@@ -367,6 +367,12 @@ void EventHandler::processGUIAction(const PlayerAction action,
                 onWidgetActivated( w, playerID );
             }
             break;
+//        case PA_TEST_1:
+//            std::cout << "Test1" << std::endl;
+//            break;
+//        case PA_TEST_2:
+//            std::cout << "Test2" << std::endl;
+//            break;
         default:
             return;
     }

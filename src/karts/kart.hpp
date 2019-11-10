@@ -428,6 +428,8 @@ public:
     /** Returns the number of powerups. */
     virtual int getNumPowerup() const OVERRIDE;
 
+    virtual void setNumPowerUp(int num) const OVERRIDE;
+
     // ========================================================================================
     // SPECIAL-STATUS related functions (plunger, squash, shield, immunity).
     // ----------------------------------------------------------------------------------------

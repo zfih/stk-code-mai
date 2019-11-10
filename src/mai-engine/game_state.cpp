@@ -3,14 +3,17 @@
 //
 
 #include "game_state.hpp"
+#include "mai_engine.hpp"
 
-GameState::GameState(){
-    //m_world = World::getWorld();
+GameState::GameState(World *world){
+    m_world = world;
+    std::cout << "I GOT MADE!" << std::endl;
     init();
 }
 
 GameState::GameState(const GameState &state) { // Copy constructor
-    m_world             = state.m_world; // TODO: make copyable world
+    std::cout << "I GOT COPIED!" << std::endl;
+    m_world             = state.m_world;
     m_transform_events  = state.m_transform_events;
     m_physic_info       = state.m_physic_info;
     m_bonus_info        = state.m_bonus_info;
@@ -33,6 +36,8 @@ void GameState::init() {
     m_physic_info.resize(race_manager->getNumberOfKarts());
     m_bonus_info.resize(race_manager->getNumberOfKarts());
     m_kart_replay_event.resize(race_manager->getNumberOfKarts());
+
+    m_max_frames = stk_config->m_replay_max_frames;
 
     for(unsigned int i=0; i<race_manager->getNumberOfKarts(); i++)
     {
@@ -57,7 +62,7 @@ void GameState::reset() {
     m_last_saved_time.clear();
 }
 
-void GameState::update(int ticks) {
+void GameState::update() {
     if (m_incorrect_replay || m_complete_replay) return;
 
     m_world = World::getWorld();
@@ -75,107 +80,8 @@ void GameState::update(int ticks) {
 
         if (kart->isGhostKart()) continue;
 
-        // If one of the tracked kart data has significantly changed
-        // for the kart, update sooner than the usual dt
-        bool force_update = false;
 
-        // Don't save directly the enum value, because any change
-        // to it would break the reading of old replays
-        int attachment = enumToCode(kart->getAttachment()->getType());
-        int powerup_type = enumToCode(kart->getPowerup()->getType());
-        int special_value = 0;
-
-        if (attachment == -1)
-        {
-            Log::error("ReplayRecorder", "Unknown attachment type");
-            return;
-        }
-        if (powerup_type == -1)
-        {
-            Log::error("ReplayRecorder", "Unknown powerup type");
-            return;
-        }
-
-        if (m_count_transforms[i] >= 2)
-        {
-            BonusInfo *b_prev       = &(m_bonus_info[i][m_count_transforms[i]-1]);
-            BonusInfo *b_prev2      = &(m_bonus_info[i][m_count_transforms[i]-2]);
-            PhysicInfo *q_prev      = &(m_physic_info[i][m_count_transforms[i]-1]);
-
-            // If the kart changes its steering
-            if (fabsf(kart->getControls().getSteer() - m_previous_steer) >
-                stk_config->m_replay_delta_steering)
-                force_update = true;
-
-            // If the kart starts or stops skidding
-            if (kart->getSkidding()->getSkidState() != q_prev->m_skidding_state)
-                force_update = true;
-            // If the kart changes speed significantly
-            float speed_change = fabsf(kart->getSpeed() - q_prev->m_speed);
-            if ( speed_change > stk_config->m_replay_delta_speed )
-            {
-                if (speed_change > 4*stk_config->m_replay_delta_speed)
-                    force_update = true;
-                else if (speed_change > 2*stk_config->m_replay_delta_speed &&
-                         time - m_last_saved_time[i] > (stk_config->m_replay_dt/8.0f))
-                    force_update = true;
-                else if (time - m_last_saved_time[i] > (stk_config->m_replay_dt/3.0f))
-                    force_update = true;
-            }
-
-            // If the attachment has changed
-            if (attachment != b_prev->m_attachment)
-                force_update = true;
-
-            // If the item amount has changed
-            if (kart->getNumPowerup() != b_prev->m_item_amount)
-                force_update = true;
-
-            // If the item type has changed
-            if (powerup_type != b_prev->m_item_type)
-                force_update = true;
-
-            // In egg-hunt mode, if an egg has been collected
-            // In battle mode, if a live has been lost/gained
-            if (special_value != b_prev->m_special_value)
-                force_update = true;
-
-            // If nitro starts being used or is collected
-            if (kart->getEnergy() != b_prev->m_nitro_amount &&
-                b_prev->m_nitro_amount == b_prev2->m_nitro_amount)
-                force_update = true;
-
-            // If nitro stops being used
-            // (also generates an extra transform on collection,
-            //  should be negligible and better than heavier checks)
-            if (kart->getEnergy() == b_prev->m_nitro_amount &&
-                b_prev->m_nitro_amount != b_prev2->m_nitro_amount)
-                force_update = true;
-
-            // If close to the end of the race, reduce the time step
-            // for extra precision
-            // TODO : fast updates when close to the last egg in egg hunt
-            if (race_manager->isLinearRaceMode())
-            {
-                float full_distance;
-                full_distance = race_manager->getNumLaps()
-                                * Track::getCurrentTrack()->getTrackLength();
-
-                const LinearWorld *linearworld = dynamic_cast<LinearWorld*>(World::getWorld());
-                if (full_distance + DISTANCE_MAX_UPDATES >= linearworld->getOverallDistance(i) &&
-                    full_distance <= linearworld->getOverallDistance(i) + DISTANCE_FAST_UPDATES)
-                {
-                    if (fabsf(full_distance - linearworld->getOverallDistance(i)) < DISTANCE_MAX_UPDATES)
-                        force_update = true;
-                    else if (time - m_last_saved_time[i] > (stk_config->m_replay_dt/5.0f))
-                        force_update = true;
-                }
-            }
-        }
-
-
-        if ( time - m_last_saved_time[i] < (stk_config->m_replay_dt - stk_config->ticks2Time(1)) &&
-             !force_update)
+        if ( time - m_last_saved_time[i] < (stk_config->m_replay_dt - stk_config->ticks2Time(1)))
         {
             continue;
         }
@@ -220,11 +126,10 @@ void GameState::update(int ticks) {
         }
         q->m_skidding_state    = kart->getSkidding()->getSkidState();
 
-        b->m_attachment        = attachment;
+        b->m_attachment        = kart->getAttachment()->getType();
         b->m_nitro_amount      = kart->getEnergy();
         b->m_item_amount       = kart->getNumPowerup();
-        b->m_item_type         = powerup_type;
-        b->m_special_value     = special_value;
+        b->m_item_type         = kart->getPowerup()->getType();
 
         //Only saves distance if recording a linear race
         if (race_manager->isLinearRaceMode())
@@ -248,9 +153,47 @@ void GameState::update(int ticks) {
 
 
 void GameState::makeStateCurrentState() {
-    World::setWorld(m_world);
 
-    // TODO: Set saved state as
+	unsigned int num_karts = m_world->getNumKarts();
+
+	for (unsigned int i = 0; i < num_karts; i++)
+	{
+		AbstractKart* kart = m_world->getKart(i);
+
+        TransformEvent p      = m_transform_events[i][m_count_transforms[i]-1];
+        PhysicInfo q          = m_physic_info[i][m_count_transforms[i]-1];
+        BonusInfo b           = m_bonus_info[i][m_count_transforms[i]-1];
+        KartReplayEvent r     = m_kart_replay_event[i][m_count_transforms[i]-1];
+
+        m_world->setTime(p.m_time);
+
+        kart->setXYZ(p.m_transform.getOrigin());
+        kart->setRotation(p.m_transform.getRotation());
+
+        kart->setSpeed(q.m_speed);
+        kart->getControls().setSteer(q.m_steer);
+
+        const int num_wheels = kart->getVehicle()->getNumWheels();
+        for (int j = 0; j < 4; j++)
+        {
+            if (j > num_wheels || num_wheels == 0)
+                q.m_suspension_length[j] = 0.0f;
+            else
+            {
+                kart->getVehicle()->getWheelInfo(j).m_raycastInfo.m_suspensionLength = q.m_suspension_length[j];
+            }
+        }
+
+        kart->getSkidding()->setSkidState(q.m_skidding_state);
+
+        kart->getAttachment()->set(b.m_attachment);
+        kart->setEnergy(b.m_nitro_amount);
+        kart->getPowerup()->set(b.m_item_type, b.m_item_amount);
+	}
+}
+
+GameState GameState::copyGameState(){
+    return GameState(*this);
 }
 
 int GameState::enumToCode(Attachment::AttachmentType type)

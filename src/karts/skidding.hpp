@@ -139,6 +139,11 @@ public:
     // ------------------------------------------------------------------------
     /** Returns the skidding state. */
     SkidState getSkidState() const { return m_skid_state; }
+
+    // MAI
+    void setSkidState(const SkidState state){ m_skid_state = state; }
+    // MAI
+
     // ------------------------------------------------------------------------
     float getSteeringWhenSkidding(float steering) const;
     // ------------------------------------------------------------------------

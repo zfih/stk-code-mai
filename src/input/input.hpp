@@ -135,6 +135,9 @@ enum PlayerAction
     PA_MENU_SELECT,
     PA_MENU_CANCEL,
 
+    PA_TEST_1,
+    PA_TEST_2,
+
     PA_COUNT
 };
 
@@ -162,7 +165,9 @@ static std::string KartActionStrings[PA_COUNT] = {std::string("steerLeft"),
                                                   std::string("menuLeft"),
                                                   std::string("menuRight"),
                                                   std::string("menuSelect"),
-                                                  std::string("menuCancel")
+                                                  std::string("menuCancel"),
+                                                  std::string("test1"),
+                                                  std::string("test2")
                                                   };
 
 #endif
