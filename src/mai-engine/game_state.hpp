@@ -117,7 +117,7 @@ public: // everything is public, this isn't pretty, but convenient.
 
 
     // functions
-    GameState();
+    GameState(World *world);
     GameState(const GameState &state);
     ~GameState();
 

@@ -5,13 +5,15 @@
 #include "game_state.hpp"
 #include "mai_engine.hpp"
 
-GameState::GameState(){
-    m_world = World::getWorld();
+GameState::GameState(World *world){
+    m_world = world;
+    std::cout << "I GOT MADE!" << std::endl;
     init();
 }
 
 GameState::GameState(const GameState &state) { // Copy constructor
-    m_world             = state.m_world; // TODO: make copyable world
+    std::cout << "I GOT COPIED!" << std::endl;
+    m_world             = state.m_world;
     m_transform_events  = state.m_transform_events;
     m_physic_info       = state.m_physic_info;
     m_bonus_info        = state.m_bonus_info;
@@ -34,6 +36,8 @@ void GameState::init() {
     m_physic_info.resize(race_manager->getNumberOfKarts());
     m_bonus_info.resize(race_manager->getNumberOfKarts());
     m_kart_replay_event.resize(race_manager->getNumberOfKarts());
+
+    m_max_frames = stk_config->m_replay_max_frames;
 
     for(unsigned int i=0; i<race_manager->getNumberOfKarts(); i++)
     {
@@ -149,7 +153,6 @@ void GameState::update() {
 
 
 void GameState::makeStateCurrentState() {
-    World::setWorld(m_world);
 
 	unsigned int num_karts = m_world->getNumKarts();
 
@@ -157,37 +160,35 @@ void GameState::makeStateCurrentState() {
 	{
 		AbstractKart* kart = m_world->getKart(i);
 
-        TransformEvent *p      = &(m_transform_events[i][m_count_transforms[i]-1]);
-        PhysicInfo *q          = &(m_physic_info[i][m_count_transforms[i]-1]);
-        BonusInfo *b           = &(m_bonus_info[i][m_count_transforms[i]-1]);
-        KartReplayEvent *r     = &(m_kart_replay_event[i][m_count_transforms[i]-1]);
+        TransformEvent p      = m_transform_events[i][m_count_transforms[i]-1];
+        PhysicInfo q          = m_physic_info[i][m_count_transforms[i]-1];
+        BonusInfo b           = m_bonus_info[i][m_count_transforms[i]-1];
+        KartReplayEvent r     = m_kart_replay_event[i][m_count_transforms[i]-1];
 
-        m_world->setTime(p->m_time);
+        m_world->setTime(p.m_time);
 
-        kart->setXYZ(p->m_transform.getOrigin());
-        kart->setRotation(p->m_transform.getRotation());
+        kart->setXYZ(p.m_transform.getOrigin());
+        kart->setRotation(p.m_transform.getRotation());
 
-        kart->setSpeed(q->m_speed);
-        kart->getControls().setSteer(q->m_steer);
+        kart->setSpeed(q.m_speed);
+        kart->getControls().setSteer(q.m_steer);
 
         const int num_wheels = kart->getVehicle()->getNumWheels();
         for (int j = 0; j < 4; j++)
         {
             if (j > num_wheels || num_wheels == 0)
-                q->m_suspension_length[j] = 0.0f;
+                q.m_suspension_length[j] = 0.0f;
             else
             {
-                q->m_suspension_length[j] = kart->getVehicle()
-                        ->getWheelInfo(j).m_raycastInfo.m_suspensionLength;
-                kart->getVehicle()->getWheelInfo(j).m_raycastInfo.m_suspensionLength = q->m_suspension_length[j];
+                kart->getVehicle()->getWheelInfo(j).m_raycastInfo.m_suspensionLength = q.m_suspension_length[j];
             }
         }
 
-        kart->getSkidding()->setSkidState(q->m_skidding_state);
+        kart->getSkidding()->setSkidState(q.m_skidding_state);
 
-        kart->getAttachment()->set(b->m_attachment);
-        kart->setEnergy(b->m_nitro_amount);
-        kart->getPowerup()->set(b->m_item_type, b->m_item_amount);
+        kart->getAttachment()->set(b.m_attachment);
+        kart->setEnergy(b.m_nitro_amount);
+        kart->getPowerup()->set(b.m_item_type, b.m_item_amount);
 	}
 }
 
