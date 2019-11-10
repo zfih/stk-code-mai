@@ -12,9 +12,21 @@ class MAIDQNTrainer : public MAIAlgorithm {
 private:
 	MAIDQNModel *m_policyNet;
 	MAIDQNModel *m_targetNet;
+	int m_stepsDone;
+	struct
+	{
+		std::vector<float> states;
+		std::vector<PlayerAction> actions;
+		std::vector<float> nextStates;
+		std::vector<float> rewards;
+	} replayMemory;
+
+	void optimiseModel();
+	PlayerAction selectAction(float state);
+	torch::optim::RMSprop m_optimiser;
 public:
 	MAIDQNTrainer(MAIDQNModel *model);
-	~MAIDQNTrainer();
+	//~MAIDQNTrainer();
 	void run();
 };
 
