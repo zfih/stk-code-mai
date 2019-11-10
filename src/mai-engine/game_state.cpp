@@ -87,12 +87,12 @@ void GameState::update() {
 
         if (attachment == -1)
         {
-            Log::error("ReplayRecorder", "Unknown attachment type");
+            Log::error("GameState", "Unknown attachment type");
             return;
         }
         if (powerup_type == -1)
         {
-            Log::error("ReplayRecorder", "Unknown powerup type");
+            Log::error("GameState", "Unknown powerup type");
             return;
         }
 
@@ -250,7 +250,33 @@ void GameState::update() {
 void GameState::makeStateCurrentState() {
     World::setWorld(m_world);
 
-    // TODO: Set current state to this state
+	const bool single_player = race_manager->getNumPlayers() == 1;
+	unsigned int num_karts = m_world->getNumKarts();
+
+	float time = m_world->getTime();
+
+	for (unsigned int i = 0; i < num_karts; i++)
+	{
+		AbstractKart* kart = m_world->getKart(i);
+
+		int attachment = enumToCode(kart->getAttachment()->getType());
+		int powerup_type = enumToCode(kart->getPowerup()->getType());
+		int special_value = 0;
+
+		if (attachment == -1)
+		{
+			Log::error("GameState", "Unknown attachment type");
+			return;
+		}
+		if (powerup_type == -1)
+		{
+			Log::error("GameState", "Unknown powerup type");
+			return;
+		}
+
+
+	}
+
 }
 
 GameState GameState::copyGameState(){
