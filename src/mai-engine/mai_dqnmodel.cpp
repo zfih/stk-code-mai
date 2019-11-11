@@ -33,20 +33,22 @@ PlayerAction MAIDQNModel::getAction()
 	StandardRace *srWorld = dynamic_cast<StandardRace*>(world);
 	float input = srWorld->getDistanceDownTrackForKart(m_kartID, /*Account for checklines? WTH is this?*/false);
 	
-	getAction(input);
+	return getAction(input);
 }
 
 PlayerAction MAIDQNModel::getAction(float distanceDownTrack)
 {
-	torch::Tensor x = torch::full((1, 1), distanceDownTrack);
-
 	// Forward the distance through the network
-	x = forward(x);
+	torch::Tensor x = pseudoForward(distanceDownTrack);
+
+	//std::cout << x.accessor<float,1>() << "\n";
+	auto theVals = x.accessor<float, 1>();
 
 	// Return an action based on the network output
 	float highestVal = 0;
 	for (int i = 1; i < 4; i++) {
-		if (x.item<float>[0][i] < x.item<float>[0][highestVal]) {
+		if (theVals[i] < theVals[highestVal]) {
+		//if (x[0][i].item<float>() < x[0][highestVal].item<float>()) {
 			highestVal = i;
 		}
 	}
@@ -82,5 +84,5 @@ torch::Tensor MAIDQNModel::pseudoForward(float x)
 	t = torch::relu(m_inLayer->forward(t)); // Maybe not ReLU?
 	t = torch::relu(m_hiddenLayerOne->forward(t));
 	t = torch::relu(m_hiddenLayerTwo->forward(t));
-	return torch::softmax(m_outLayer->forward(t), /*dim=*/1);
+	return torch::softmax(m_outLayer->forward(t), /*dim=*/0);
 }

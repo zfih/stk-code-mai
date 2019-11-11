@@ -23,7 +23,7 @@ private:
 
 	void optimiseModel();
 	PlayerAction selectAction(float state);
-	torch::optim::RMSprop m_optimiser;
+	torch::optim::Optimizer *m_optimiser;
 public:
 	MAIDQNTrainer(MAIDQNModel *model);
 	//~MAIDQNTrainer();

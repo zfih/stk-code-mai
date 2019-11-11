@@ -19,10 +19,20 @@
 MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 	m_policyNet = model;
 	m_targetNet = new MAIDQNModel(model->getKartID());
-	// TODO make targetNet's weights the same as policyNet's
+
+	// Make targetNet's weights the same as policyNet's
+	if (!m_policyNet->is_serializable()) throw 909;
+	torch::serialize::OutputArchive outArchive;
+	m_policyNet->save(outArchive);
+	outArchive.save_to("tempPolicyToTarget.pt");
+	torch::serialize::InputArchive inArchive;
+	inArchive.load_from("tempPolicyToTarget.pt");
+	m_targetNet->load(inArchive);
+
 	m_stepsDone = 0;
 	srand(time(NULL));
-	m_optimiser = torch::optim::RMSprop(m_policyNet->parameters(), torch::optim::RMSpropOptions(0.01));
+	torch::optim::RMSprop(m_policyNet->parameters(), 0.1);
+	m_optimiser = dynamic_cast<torch::optim::Optimizer*>(new torch::optim::RMSprop(m_policyNet->parameters(), torch::optim::RMSpropOptions(0.01)));
 }
 
 PlayerAction MAIDQNTrainer::selectAction(float state) {
@@ -52,9 +62,9 @@ void MAIDQNTrainer::optimiseModel() {
 
 		auto loss = torch::smooth_l1_loss(stateActionValues, expectedStateActionValues.unsqueeze(1));
 
-		m_optimiser.zero_grad();
+		m_optimiser->zero_grad();
 		loss.backward();
-		m_optimiser.step();
+		m_optimiser->step();
 	}
 }
 
@@ -81,7 +91,14 @@ void MAIDQNTrainer::run() {
 			if (done) break;
 		}
 		if (i % TARGET_UPDATE == 0) {
-			// TODO make tagetNet's weights the same as policyNet's
+			// Make targetNet's weights the same as policyNet's
+			if (!m_policyNet->is_serializable()) throw 909;
+			torch::serialize::OutputArchive outArchive;
+			m_policyNet->save(outArchive);
+			outArchive.save_to("tempPolicyToTarget.pt");
+			torch::serialize::InputArchive inArchive;
+			inArchive.load_from("tempPolicyToTarget.pt");
+			m_targetNet->load(inArchive);
 		}
 	}
 	std::cout << "Running is fun :D\n";
