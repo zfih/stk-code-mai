@@ -35,8 +35,8 @@ void MAIEngine::update(){
 }
 
 void MAIEngine::saveState(){
-    GameState state = m_game_state->copyGameState();
-    m_game_states.push_back(&state);
+    GameState *state = m_game_state->copyGameState();
+    m_game_states.push_back(state);
     m_game_state_count++;
 }
 

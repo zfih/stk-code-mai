@@ -126,7 +126,7 @@ public: // everything is public, this isn't pretty, but convenient.
     void update();
     void makeStateCurrentState();
 
-    GameState copyGameState();
+    GameState *copyGameState();
 
     int enumToCode(Attachment::AttachmentType type);
 

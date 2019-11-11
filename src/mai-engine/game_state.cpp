@@ -6,14 +6,14 @@
 #include "mai_engine.hpp"
 
 GameState::GameState(World *world){
-    m_world = world;
+    m_world = World::getWorld();
     std::cout << "I GOT MADE!" << std::endl;
     init();
 }
 
 GameState::GameState(const GameState &state) { // Copy constructor
     std::cout << "I GOT COPIED!" << std::endl;
-    m_world             = state.m_world;
+	m_world				= state.m_world;
     m_transform_events  = state.m_transform_events;
     m_physic_info       = state.m_physic_info;
     m_bonus_info        = state.m_bonus_info;
@@ -64,8 +64,6 @@ void GameState::reset() {
 
 void GameState::update() {
     if (m_incorrect_replay || m_complete_replay) return;
-
-    m_world = World::getWorld();
 
     const bool single_player = race_manager->getNumPlayers() == 1;
     unsigned int num_karts = m_world->getNumKarts();
@@ -192,8 +190,8 @@ void GameState::makeStateCurrentState() {
 	}
 }
 
-GameState GameState::copyGameState(){
-    return GameState(*this);
+GameState *GameState::copyGameState(){
+    return new GameState(*this);
 }
 
 int GameState::enumToCode(Attachment::AttachmentType type)
