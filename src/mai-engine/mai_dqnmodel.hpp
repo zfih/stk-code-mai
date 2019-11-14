@@ -7,11 +7,12 @@
 
 #include "mai_model.hpp"
 
-class MAIDQNModel : public MAIModel, public torch::nn::Module {
+class MAIDQNModel : public MAIModel/*, public torch::nn::Module*/ {
 private:
 	int m_kartID;
 	std::vector<PlayerAction> m_actions;
 
+	torch::nn::Module *m_module;
 	std::shared_ptr<torch::nn::LinearImpl> m_inLayer;
 	std::shared_ptr<torch::nn::LinearImpl> m_hiddenLayerOne;
 	std::shared_ptr<torch::nn::LinearImpl> m_hiddenLayerTwo;
@@ -20,6 +21,7 @@ public:
 	MAIDQNModel(int kartID);
 	~MAIDQNModel();
 
+	torch::nn::Module *getModule();
 	PlayerAction getAction(/*State state*/);
 	PlayerAction getAction(float distanceDownTrack);
 	torch::Tensor pseudoForward(float x);

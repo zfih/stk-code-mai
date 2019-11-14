@@ -9,6 +9,7 @@
 #include "modes/world.hpp"
 #include "game_state.hpp"
 #include "mai_modeltest.hpp"
+#include "mai_algorithm.hpp"
 
 class World;
 
@@ -24,6 +25,7 @@ private:
     StateManager *m_state_manager;
 
 	MAIModel *m_mai_model;
+	MAIAlgorithm* m_mai_algorithm;
 
 public:
 	MAIEngine();

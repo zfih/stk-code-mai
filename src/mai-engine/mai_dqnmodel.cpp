@@ -11,11 +11,12 @@ MAIDQNModel::MAIDQNModel(int kartID)
 {
 	m_kartID = kartID;
 	m_actions = { PlayerAction::PA_ACCEL, PlayerAction::PA_BRAKE, PlayerAction::PA_STEER_LEFT, PlayerAction::PA_STEER_RIGHT };
+	m_module = new torch::nn::Module();
 
-	m_inLayer = register_module("inLayer", torch::nn::Linear(1, 8));
-	m_hiddenLayerOne = register_module("hiddenLayerOne", torch::nn::Linear(8, 64));
-	m_hiddenLayerTwo = register_module("hiddenLayerTwo", torch::nn::Linear(64, 64));
-	m_outLayer = register_module("outLayer", torch::nn::Linear(64, /*Number of actions*/4));
+	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(1, 8));
+	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(8, 64));
+	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(64, 64));
+	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(64, /*Number of actions*/4));
 }
 
 MAIDQNModel::~MAIDQNModel()
@@ -24,6 +25,11 @@ MAIDQNModel::~MAIDQNModel()
 	m_hiddenLayerOne.~shared_ptr();
 	m_hiddenLayerTwo.~shared_ptr();
 	m_outLayer.~shared_ptr();
+}
+
+torch::nn::Module* MAIDQNModel::getModule()
+{
+	return m_module;
 }
 
 PlayerAction MAIDQNModel::getAction()
@@ -45,9 +51,12 @@ PlayerAction MAIDQNModel::getAction(float distanceDownTrack)
 	auto theVals = x.accessor<float, 1>();
 
 	// Return an action based on the network output
-	float highestVal = 0;
+	int highestVal = 0;
+
 	for (int i = 1; i < 4; i++) {
-		if (theVals[i] < theVals[highestVal]) {
+		auto test = theVals[i];
+		auto test2 = theVals[highestVal];
+		if (theVals[i] > theVals[highestVal]) {
 		//if (x[0][i].item<float>() < x[0][highestVal].item<float>()) {
 			highestVal = i;
 		}

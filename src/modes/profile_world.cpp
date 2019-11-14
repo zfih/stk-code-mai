@@ -31,6 +31,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "mai-engine/mai_controller.hpp"
+
 ProfileWorld::ProfileType ProfileWorld::m_profile_mode=PROFILE_NONE;
 int   ProfileWorld::m_num_laps    = 0;
 float ProfileWorld::m_time        = 0.0f;
@@ -114,8 +116,11 @@ std::shared_ptr<AbstractKart> ProfileWorld::createKart
     std::shared_ptr<KartWithStats> new_kart =
         std::make_shared<KartWithStats>(kart_ident, /*world kart id*/ index,
         /*position*/ index + 1, init_pos, handicap);
-    new_kart->init(RaceManager::KT_AI);
-    Controller *controller = loadAIController(new_kart.get());
+    /*new_kart->init(RaceManager::KT_AI);
+    Controller *controller = loadAIController(new_kart.get());*/
+	new_kart->init(RaceManager::KT_PLAYER);
+	Controller* controller = new MAIController(new_kart.get(),
+		local_player_id, handicap);
     new_kart->setController(controller);
 
     // Create a camera for the last kart (since this way more of the

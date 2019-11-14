@@ -15,8 +15,9 @@ void MAIController::update(int ticks) {
 
 	static unsigned long updateCount = 1;
 
-	if (World::getWorld()->getPhase() == WorldStatus::RACE_PHASE || World::getWorld()->getPhase() == WorldStatus::SET_PHASE || World::getWorld()->getPhase() == WorldStatus::GO_PHASE)
-        MAIController::action(act, UINT16_MAX, false);
+	//if (World::getWorld()->getPhase() == WorldStatus::RACE_PHASE || World::getWorld()->getPhase() == WorldStatus::SET_PHASE || World::getWorld()->getPhase() == WorldStatus::GO_PHASE)
+    if (World::getWorld()->getPhase() != WorldStatus::READY_PHASE)
+		MAIController::action(act, UINT16_MAX, false);
 
 	LocalPlayerController::update(ticks);
 	updateCount++;

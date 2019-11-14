@@ -4,6 +4,7 @@
 
 #include "mai_engine.hpp"
 #include "mai_dqnmodel.hpp"
+#include "mai_dqntrainer.hpp"
 
 MAIEngine *MAIEngine::m_mai_engine = nullptr;
 
@@ -16,6 +17,7 @@ MAIEngine::MAIEngine()
 	m_state_manager->getGameState();
 	//m_mai_model = new MAIModelTest(0); // TODO: GO AWAY FROM TEST MODEL!
 	m_mai_model = new MAIDQNModel(0);
+	m_mai_algorithm = new MAIDQNTrainer(dynamic_cast<MAIDQNModel*>(m_mai_model));
 	m_game_state_count = 0;
 }
 
@@ -30,6 +32,7 @@ MAIEngine::~MAIEngine()
 PlayerAction MAIEngine::getAction()
 {
 	//return PlayerAction::PA_ACCEL;
+	m_mai_algorithm->run();
 	return m_mai_model->getAction();
 }
 

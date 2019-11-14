@@ -8,6 +8,8 @@
 #include "mai_dqntrainer.hpp"
 #include "modes/standard_race.hpp" // This should probably not be here.
 #include <math.h>
+#include <torch/csrc/jit/import.h>
+#include <torch/csrc/jit/export.h>
 
 #define BATCH_SIZE 128
 #define GAMMA 0.999
@@ -21,18 +23,22 @@ MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 	m_targetNet = new MAIDQNModel(model->getKartID());
 
 	// Make targetNet's weights the same as policyNet's
-	if (!m_policyNet->is_serializable()) throw 909;
-	torch::serialize::OutputArchive outArchive;
-	m_policyNet->save(outArchive);
+	if (!m_policyNet->getModule()->is_serializable()) throw 909;
+	//torch::save(m_policyNet->getModule(), "tempPolicyToTarget.pt");
+	auto compilationUnit = std::make_shared<torch::jit::script::CompilationUnit>();
+	torch::serialize::OutputArchive outArchive = torch::serialize::OutputArchive(compilationUnit);
+	//(dynamic_cast<torch::nn::Module*>(m_policyNet))->save(outArchive);
+	m_policyNet->getModule()->save(outArchive);
 	outArchive.save_to("tempPolicyToTarget.pt");
-	torch::serialize::InputArchive inArchive;
+	torch::serialize::InputArchive inArchive = torch::serialize::InputArchive();
+	//torch::load(*(m_targetNet->getModule()), "tempPolicyToTarget.pt");
 	inArchive.load_from("tempPolicyToTarget.pt");
-	m_targetNet->load(inArchive);
+	m_targetNet->getModule()->load(inArchive);
 
 	m_stepsDone = 0;
 	srand(time(NULL));
-	torch::optim::RMSprop(m_policyNet->parameters(), 0.1);
-	m_optimiser = dynamic_cast<torch::optim::Optimizer*>(new torch::optim::RMSprop(m_policyNet->parameters(), torch::optim::RMSpropOptions(0.01)));
+	torch::optim::RMSprop(m_policyNet->getModule()->parameters(), 0.1);
+	m_optimiser = dynamic_cast<torch::optim::Optimizer*>(new torch::optim::RMSprop(m_policyNet->getModule()->parameters(), torch::optim::RMSpropOptions(0.01)));
 }
 
 PlayerAction MAIDQNTrainer::selectAction(float state) {
@@ -51,7 +57,7 @@ PlayerAction MAIDQNTrainer::selectAction(float state) {
 void MAIDQNTrainer::optimiseModel() {
 	if (replayMemory.states.size() < BATCH_SIZE) return;
 	for (int i = 0; i < BATCH_SIZE; i++) {
-		int sample = rand() % BATCH_SIZE;
+		int sample = rand() % replayMemory.states.size();
 		torch::Tensor stateActionValues = m_policyNet->pseudoForward(replayMemory.states[sample]);
 
 		torch::Tensor nextStateValues = torch::zeros(BATCH_SIZE);
@@ -80,7 +86,7 @@ void MAIDQNTrainer::run() {
 			// TODO perform the action
 			float nextState = state + 1.0f; // Placeholder
 			float reward = 1.0f; // Placeholder
-			bool done = (state == 50.0f); // Placeholder // Floating point comparison might be a problem :(
+			bool done = (state > 50.0f); // Placeholder // Floating point comparison might be a problem :(
 			
 			replayMemory.states.push_back(state);
 			replayMemory.actions.push_back(action);
@@ -92,13 +98,14 @@ void MAIDQNTrainer::run() {
 		}
 		if (i % TARGET_UPDATE == 0) {
 			// Make targetNet's weights the same as policyNet's
-			if (!m_policyNet->is_serializable()) throw 909;
-			torch::serialize::OutputArchive outArchive;
-			m_policyNet->save(outArchive);
+			if (!m_policyNet->getModule()->is_serializable()) throw 909;
+			auto compilationUnit = std::make_shared<torch::jit::script::CompilationUnit>();
+			torch::serialize::OutputArchive outArchive = torch::serialize::OutputArchive(compilationUnit);
+			m_policyNet->getModule()->save(outArchive);
 			outArchive.save_to("tempPolicyToTarget.pt");
 			torch::serialize::InputArchive inArchive;
 			inArchive.load_from("tempPolicyToTarget.pt");
-			m_targetNet->load(inArchive);
+			m_targetNet->getModule()->load(inArchive);
 		}
 	}
 	std::cout << "Running is fun :D\n";
