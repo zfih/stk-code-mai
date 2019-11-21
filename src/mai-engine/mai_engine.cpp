@@ -32,7 +32,7 @@ MAIEngine::~MAIEngine()
 PlayerAction MAIEngine::getAction()
 {
 	//return PlayerAction::PA_ACCEL;
-	m_mai_algorithm->run();
+	//m_mai_algorithm->run();
 	return m_mai_model->getAction();
 }
 

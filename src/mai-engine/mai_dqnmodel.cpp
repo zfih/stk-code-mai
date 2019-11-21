@@ -64,12 +64,12 @@ PlayerAction MAIDQNModel::getAction(float distanceDownTrack)
 	return m_actions[highestVal];
 }
 
-//torch::Tensor MAIDQNModel::forward(torch::Tensor x) {
-//	x = torch::relu(m_inLayer->forward(x)); // Maybe not ReLU?
-//	x = torch::relu(m_hiddenLayerOne->forward(x));
-//	x = torch::relu(m_hiddenLayerTwo->forward(x));
-//	return torch::softmax(m_outLayer->forward(x), /*dim=*/1);
-//}
+torch::Tensor MAIDQNModel::forward(torch::Tensor x) {
+	x = torch::relu(m_inLayer->forward(x)); // Maybe not ReLU?
+	x = torch::relu(m_hiddenLayerOne->forward(x));
+	x = torch::relu(m_hiddenLayerTwo->forward(x));
+	return torch::softmax(m_outLayer->forward(x), /*dim=*/1);
+}
 
 int MAIDQNModel::getKartID()
 {
@@ -88,7 +88,9 @@ PlayerAction MAIDQNModel::getAction(int index)
 
 torch::Tensor MAIDQNModel::pseudoForward(float x)
 {
-	torch::Tensor t = torch::full((1, 1), x);
+	torch::Tensor t = torch::tensor(x);
+
+	//std::cout << t << "\n";
 
 	t = torch::relu(m_inLayer->forward(t)); // Maybe not ReLU?
 	t = torch::relu(m_hiddenLayerOne->forward(t));
