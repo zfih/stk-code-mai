@@ -116,11 +116,19 @@ std::shared_ptr<AbstractKart> ProfileWorld::createKart
     std::shared_ptr<KartWithStats> new_kart =
         std::make_shared<KartWithStats>(kart_ident, /*world kart id*/ index,
         /*position*/ index + 1, init_pos, handicap);
-    /*new_kart->init(RaceManager::KT_AI);
-    Controller *controller = loadAIController(new_kart.get());*/
-	new_kart->init(RaceManager::KT_PLAYER);
-	Controller* controller = new MAIController(new_kart.get(),
-		local_player_id, handicap);
+
+	Controller* controller;
+
+	if (index != 0) {
+		new_kart->init(RaceManager::KT_AI);
+		controller = loadAIController(new_kart.get());
+	}
+	else {
+		new_kart->init(RaceManager::KT_PLAYER);
+		controller = new MAIController(new_kart.get(),
+			local_player_id, handicap);
+	}
+
     new_kart->setController(controller);
 
     // Create a camera for the last kart (since this way more of the

@@ -25,7 +25,7 @@ public:
 	PlayerAction getAction(/*State state*/);
 	PlayerAction getAction(float distanceDownTrack);
 	torch::Tensor pseudoForward(float x);
-	//torch::Tensor forward(torch::Tensor x);
+	torch::Tensor forward(torch::Tensor x);
 	int getKartID();
 	int getNumActions();
 	PlayerAction getAction(int index);
