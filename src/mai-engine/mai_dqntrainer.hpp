@@ -10,9 +10,18 @@
 
 class MAIDQNTrainer : public MAIAlgorithm {
 private:
+	void optimiseModel();
+	PlayerAction selectAction(float state);
+	void saveToTargetModel();
+
 	MAIDQNModel *m_policyNet;
 	MAIDQNModel *m_targetNet;
 	int m_stepsDone;
+	torch::optim::Optimizer *m_optimiser;
+	float m_lastState;
+	PlayerAction m_lastAction;
+	int m_runOnceIteration;
+	
 	struct
 	{
 		std::vector<float> states;
@@ -20,14 +29,11 @@ private:
 		std::vector<float> nextStates;
 		std::vector<float> rewards;
 	} replayMemory;
-
-	void optimiseModel();
-	PlayerAction selectAction(float state);
-	torch::optim::Optimizer *m_optimiser;
 public:
 	MAIDQNTrainer(MAIDQNModel *model);
 	//~MAIDQNTrainer();
 	void run();
+	PlayerAction runOnce();
 };
 
 #endif //SUPERTUXKART_MAI_DQNTRAINER_HPP

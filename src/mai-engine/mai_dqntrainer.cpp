@@ -22,23 +22,15 @@ MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 	m_policyNet = model;
 	m_targetNet = new MAIDQNModel(model->getKartID());
 
-	// Make targetNet's weights the same as policyNet's
-	if (!m_policyNet->getModule()->is_serializable()) throw 909;
-	//torch::save(m_policyNet->getModule(), "tempPolicyToTarget.pt");
-	auto compilationUnit = std::make_shared<torch::jit::script::CompilationUnit>();
-	torch::serialize::OutputArchive outArchive = torch::serialize::OutputArchive(compilationUnit);
-	//(dynamic_cast<torch::nn::Module*>(m_policyNet))->save(outArchive);
-	m_policyNet->getModule()->save(outArchive);
-	outArchive.save_to("tempPolicyToTarget.pt");
-	torch::serialize::InputArchive inArchive = torch::serialize::InputArchive();
-	//torch::load(*(m_targetNet->getModule()), "tempPolicyToTarget.pt");
-	inArchive.load_from("tempPolicyToTarget.pt");
-	m_targetNet->getModule()->load(inArchive);
+	saveToTargetModel();
 
 	m_stepsDone = 0;
 	srand(time(NULL));
 	torch::optim::RMSprop(m_policyNet->getModule()->parameters(), 0.1);
 	m_optimiser = dynamic_cast<torch::optim::Optimizer*>(new torch::optim::RMSprop(m_policyNet->getModule()->parameters(), torch::optim::RMSpropOptions(0.01)));
+	m_lastState = -1.0f;
+	m_lastAction = (PlayerAction)-1;
+	m_runOnceIteration = 0;
 }
 
 PlayerAction MAIDQNTrainer::selectAction(float state) {
@@ -94,15 +86,11 @@ void MAIDQNTrainer::optimiseModel() {
 		nextStateTensor = torch::cat({ nextStateTensor, torch::tensor(replayMemory.nextStates[sample]) }, 0);
 	}
 
-	/*torch::Tensor zeros = torch::zeros({ 128, 1 });
-	std::cout << zeros << "\n";
-	torch::Tensor hej = m_policyNet->forward(zeros);
-	std::cout << hej << "\n";*/
-
 	stateTensor = stateTensor.reshape({ 128, 1 });
 	//std::cout << stateTensor << "\n";
 	actionTensor = torch::_cast_Long(actionTensor);
 	actionTensor = actionTensor.reshape({ 128, 1 });
+	std::cout << actionTensor << "\n";
 	nextStateTensor = nextStateTensor.reshape({ 128,1 });
 
 	torch::Tensor stateActionValues = m_policyNet->forward(stateTensor).gather(1, actionTensor);
@@ -142,16 +130,53 @@ void MAIDQNTrainer::run() {
 			if (done) break;
 		}
 		if (i % TARGET_UPDATE == 0) {
-			// Make targetNet's weights the same as policyNet's
-			if (!m_policyNet->getModule()->is_serializable()) throw 909;
-			auto compilationUnit = std::make_shared<torch::jit::script::CompilationUnit>();
-			torch::serialize::OutputArchive outArchive = torch::serialize::OutputArchive(compilationUnit);
-			m_policyNet->getModule()->save(outArchive);
-			outArchive.save_to("tempPolicyToTarget.pt");
-			torch::serialize::InputArchive inArchive;
-			inArchive.load_from("tempPolicyToTarget.pt");
-			m_targetNet->getModule()->load(inArchive);
+			saveToTargetModel();
 		}
 	}
 	std::cout << "Running is fun :D\n";
+}
+
+PlayerAction MAIDQNTrainer::runOnce() {
+	World* world = World::getWorld();
+	StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
+	float state = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(), /*Account for checklines? WTH is this?*/false);
+
+	PlayerAction action = selectAction(state);
+	
+	if (m_lastState < 0) {
+		m_lastState = state;
+		m_lastAction = action;
+		m_runOnceIteration++;
+		return action;
+	}
+
+	replayMemory.states.push_back(m_lastState);
+	replayMemory.actions.push_back(m_lastAction);
+	replayMemory.nextStates.push_back(state);
+	replayMemory.rewards.push_back(state - m_lastState);
+
+	m_lastState = state;
+	PlayerAction tmpAction = m_lastAction;
+	m_lastAction = action;
+
+	optimiseModel();
+
+	if (m_runOnceIteration % TARGET_UPDATE == 0) {
+		saveToTargetModel();
+	}
+
+	m_runOnceIteration++;
+	return tmpAction;
+}
+
+void MAIDQNTrainer::saveToTargetModel() {
+	// Make targetNet's weights the same as policyNet's
+	if (!m_policyNet->getModule()->is_serializable()) throw 909;
+	auto compilationUnit = std::make_shared<torch::jit::script::CompilationUnit>();
+	torch::serialize::OutputArchive outArchive = torch::serialize::OutputArchive(compilationUnit);
+	m_policyNet->getModule()->save(outArchive);
+	outArchive.save_to("tempPolicyToTarget.pt");
+	torch::serialize::InputArchive inArchive = torch::serialize::InputArchive();
+	inArchive.load_from("tempPolicyToTarget.pt");
+	m_targetNet->getModule()->load(inArchive);
 }
