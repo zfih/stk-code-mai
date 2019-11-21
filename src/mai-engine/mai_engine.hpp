@@ -18,8 +18,8 @@ private:
 	static MAIEngine *m_mai_engine;
 	World *m_world;
 
-	GameState *m_game_state;
-	std::vector<GameState*> m_game_states;
+	//GameState *m_game_state;
+	//std::vector<GameState*> m_game_states;
 	int m_game_state_count;
 
     StateManager *m_state_manager;
