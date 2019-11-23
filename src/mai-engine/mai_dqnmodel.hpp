@@ -23,8 +23,8 @@ public:
 
 	torch::nn::Module *getModule();
 	PlayerAction getAction(/*State state*/);
-	PlayerAction getAction(float distanceDownTrack);
-	torch::Tensor pseudoForward(float x);
+	PlayerAction getAction(float state[]);
+	torch::Tensor pseudoForward(float state[]);
 	torch::Tensor forward(torch::Tensor x);
 	int getKartID();
 	int getNumActions();

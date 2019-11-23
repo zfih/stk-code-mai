@@ -11,14 +11,14 @@
 class MAIDQNTrainer : public MAIAlgorithm {
 private:
 	void optimiseModel();
-	PlayerAction selectAction(float state);
+	PlayerAction selectAction(float state[]);
 	void saveToTargetModel();
 
 	MAIDQNModel *m_policyNet;
 	MAIDQNModel *m_targetNet;
 	int m_stepsDone;
 	torch::optim::Optimizer *m_optimiser;
-	float m_lastState;
+	float m_lastState[2];
 	PlayerAction m_lastAction;
 	int m_runOnceIteration;
 	

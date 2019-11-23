@@ -13,7 +13,7 @@ MAIDQNModel::MAIDQNModel(int kartID)
 	m_actions = { PlayerAction::PA_ACCEL, PlayerAction::PA_BRAKE, PlayerAction::PA_STEER_LEFT, PlayerAction::PA_STEER_RIGHT };
 	m_module = new torch::nn::Module();
 
-	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(1, 8));
+	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(2, 8));
 	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(8, 64));
 	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(64, 64));
 	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(64, /*Number of actions*/4));
@@ -42,10 +42,10 @@ PlayerAction MAIDQNModel::getAction()
 	return getAction(input);
 }
 
-PlayerAction MAIDQNModel::getAction(float distanceDownTrack)
+PlayerAction MAIDQNModel::getAction(float state[])
 {
 	// Forward the distance through the network
-	torch::Tensor x = pseudoForward(distanceDownTrack);
+	torch::Tensor x = pseudoForward(state);
 
 	//std::cout << x.accessor<float,1>() << "\n";
 	auto theVals = x.accessor<float, 1>();
@@ -86,9 +86,9 @@ PlayerAction MAIDQNModel::getAction(int index)
 	return m_actions[index];
 }
 
-torch::Tensor MAIDQNModel::pseudoForward(float x)
+torch::Tensor MAIDQNModel::pseudoForward(float state[])
 {
-	torch::Tensor t = torch::tensor(x);
+	torch::Tensor t = torch::cat({ torch::tensor(state[0]), torch::tensor(state[1]) }, 0);
 
 	//std::cout << t << "\n";
 
