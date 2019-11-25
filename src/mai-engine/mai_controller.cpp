@@ -26,10 +26,10 @@ void MAIController::update(int ticks) {
 bool MAIController::action(PlayerAction action, int value, bool dry_run)
 {
     if(action == PlayerAction::PA_TEST_1){
-        m_mai_engine->saveState();
+        //m_mai_engine->saveState();
     }
     if(action == PlayerAction::PA_TEST_2){
-        m_mai_engine->setStateAsCurrent(0);
+        //m_mai_engine->setStateAsCurrent(0);
     }
 
 	return LocalPlayerController::action(action, value);

@@ -6,6 +6,19 @@
 
 #include "mai_dqnmodel.hpp"
 #include "modes/standard_race.hpp" // This should probably not be here.
+#include "karts/abstract_kart.hpp"
+
+MAIDQNModel::MAIDQNModel()
+{
+	m_kartID = -1;
+	m_actions = { PlayerAction::PA_ACCEL, PlayerAction::PA_BRAKE, PlayerAction::PA_STEER_LEFT, PlayerAction::PA_STEER_RIGHT };
+	m_module = new torch::nn::Module();
+
+	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(2, 8));
+	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(8, 64));
+	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(64, 64));
+	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(64, /*Number of actions*/4));
+}
 
 MAIDQNModel::MAIDQNModel(int kartID)
 {
@@ -36,9 +49,12 @@ PlayerAction MAIDQNModel::getAction()
 {
 	// Get the distance down the track for our kart
 	World *world = World::getWorld();
+	if (m_kartID == -1) m_kartID = world->getPlayerKart(0)->getWorldKartId();
 	StandardRace *srWorld = dynamic_cast<StandardRace*>(world);
-	float input = srWorld->getDistanceDownTrackForKart(m_kartID, /*Account for checklines? WTH is this?*/false);
-	
+	float downTrack = srWorld->getDistanceDownTrackForKart(m_kartID, /*Account for checklines? WTH is this?*/false);
+	float toCenter = srWorld->getDistanceToCenterForKart(m_kartID);
+	float input[]{ downTrack, toCenter };
+
 	return getAction(input);
 }
 
@@ -73,6 +89,12 @@ torch::Tensor MAIDQNModel::forward(torch::Tensor x) {
 
 int MAIDQNModel::getKartID()
 {
+	if (m_kartID == -1) {
+		World* world = World::getWorld();
+		m_kartID = world->getPlayerKart(0)->getWorldKartId();
+		if (m_kartID == -1)
+			std::cout << "Warning: Getting kart ID before it is initialised!\n";
+	}
 	return m_kartID;
 }
 

@@ -17,7 +17,9 @@ MAIEngine::MAIEngine()
 	m_state_manager = StateManager::get();
 	m_state_manager->getGameState();
 	//m_mai_model = new MAIModelTest(0); // TODO: GO AWAY FROM TEST MODEL!
-	m_mai_model = new MAIDQNModel(0);
+	//int playerID = m_world->getNumKarts() - 1;
+	//std::cout << playerID << "<-\n";
+	m_mai_model = new MAIDQNModel();
 	m_mai_algorithm = new MAIDQNTrainer(dynamic_cast<MAIDQNModel*>(m_mai_model));
 	m_game_state_count = 0;
 }
@@ -35,12 +37,14 @@ PlayerAction MAIEngine::getAction()
 	//return PlayerAction::PA_ACCEL;
 	/*m_mai_algorithm->run();
 	return m_mai_model->getAction();*/
-	return m_mai_algorithm->runOnce();
+	if (UserConfigParams::m_training)
+		return m_mai_algorithm->runOnce();
+	return m_mai_model->getAction();
 }
 
 void MAIEngine::update(){
-	if (UserConfigParams::m_training)
-		std::cout << "Training" << std::endl;
+	//if (UserConfigParams::m_training)
+		//std::cout << "Training" << std::endl;
     //m_game_state->update();
 }
 

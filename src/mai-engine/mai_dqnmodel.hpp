@@ -18,6 +18,7 @@ private:
 	std::shared_ptr<torch::nn::LinearImpl> m_hiddenLayerTwo;
 	std::shared_ptr<torch::nn::LinearImpl> m_outLayer;
 public:
+	MAIDQNModel();
 	MAIDQNModel(int kartID);
 	~MAIDQNModel();
 
