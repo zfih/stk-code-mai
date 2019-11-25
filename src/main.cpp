@@ -958,6 +958,9 @@ int handleCmdLine(bool has_server_config, bool has_parent_process)
 
     irr::core::stringw login, password;
 
+	if (CommandLine::has("--training"))
+		UserConfigParams::m_training = true;
+	
     if (CommandLine::has("--unit-testing"))
         UserConfigParams::m_unit_testing = true;
     if (CommandLine::has("--gamepad-debug"))
