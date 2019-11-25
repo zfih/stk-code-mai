@@ -19,6 +19,8 @@
 #define TARGET_UPDATE 10
 #define SAVE_MODEL 500
 
+const std::string modelName = "DQNmodel.pt";
+
 inline bool fileExists(const std::string& name) {
 	struct stat buffer;
 	return (stat(name.c_str(), &buffer) == 0);
@@ -27,14 +29,14 @@ inline bool fileExists(const std::string& name) {
 MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 	m_policyNet = model;
 
-	if (fileExists("DQNmodel.pt")) {
-		std::cout << "DQNmodel.pt existed. Loading the model.\n";
+	if (fileExists(modelName)) {
+		std::cout << modelName << " existed. Loading the model.\n";
 		torch::serialize::InputArchive inArchive = torch::serialize::InputArchive();
-		inArchive.load_from("DQNmodel.pt");
+		inArchive.load_from(modelName);
 		m_policyNet->getModule()->load(inArchive);
 	}
 
-	m_targetNet = new MAIDQNModel(model->getKartID());
+	m_targetNet = new MAIDQNModel(/*model->getKartID()*/);
 
 	saveToTargetModel();
 
@@ -72,20 +74,6 @@ void MAIDQNTrainer::optimiseModel() {
 	for (int i = 0; i < BATCH_SIZE; i++) {
 		//std::cout << i << "\n";
 		int sample = rand() % replayMemory.actions.size();
-		//torch::Tensor stateActionValues = m_policyNet->pseudoForward(replayMemory.states[sample]).max();
-
-		//std::cout << stateActionValues << "\n";
-		////std::cout << stateActionValues.max() << "\n\n";
-
-		//torch::Tensor nextStateValues = torch::zeros(1);
-		//nextStateValues[0] = m_targetNet->pseudoForward(replayMemory.nextStates[sample]).max();
-		//torch::Tensor expectedStateActionValues = (nextStateValues * GAMMA) + replayMemory.rewards[sample];
-
-		//auto loss = torch::smooth_l1_loss(stateActionValues, expectedStateActionValues.detach());
-
-		//m_optimiser->zero_grad();
-		//loss.backward();
-		//m_optimiser->step();
 
 		if (i == 0) {
 			stateTensor = torch::cat({ torch::tensor(replayMemory.states[sample * 2]), torch::tensor(replayMemory.states[sample * 2 + 1]) }, 0);
@@ -160,6 +148,7 @@ void MAIDQNTrainer::run() {
 
 PlayerAction MAIDQNTrainer::runOnce() {
 	World* world = World::getWorld();
+	if (world->getPhase() != world->RACE_PHASE && world->getPhase() != world->GO_PHASE) return PA_TEST_1;
 	StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
 	float state[2];
 	state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(), /*Account for checklines? WTH is this?*/false);
@@ -180,7 +169,8 @@ PlayerAction MAIDQNTrainer::runOnce() {
 	replayMemory.actions.push_back(m_lastAction);
 	replayMemory.nextStates.push_back(state[0]);
 	replayMemory.nextStates.push_back(state[1]);
-	replayMemory.rewards.push_back(state - m_lastState);
+	replayMemory.rewards.push_back(state[0] - m_lastState[0]);
+	std::cout << "Experienced reward of " << state[0] << " - " << m_lastState[0] << " = " << state[0] - m_lastState[0] << "\n";
 
 	m_lastState[0] = state[0];
 	m_lastState[1] = state[1];
@@ -198,8 +188,8 @@ PlayerAction MAIDQNTrainer::runOnce() {
 		auto compilationUnit = std::make_shared<torch::jit::script::CompilationUnit>();
 		torch::serialize::OutputArchive outArchive = torch::serialize::OutputArchive(compilationUnit);
 		m_policyNet->getModule()->save(outArchive);
-		outArchive.save_to("DQNmodel.pt");
-		std::cout << "Saved the model to DQNmodel.pt\n";
+		outArchive.save_to(modelName);
+		std::cout << "Saved the model to " << modelName << "\n";
 	}
 
 	m_runOnceIteration++;
