@@ -5,6 +5,7 @@
 #include "mai_engine.hpp"
 #include "mai_dqnmodel.hpp"
 #include "mai_dqntrainer.hpp"
+#include "config/user_config.hpp"
 
 MAIEngine *MAIEngine::m_mai_engine = nullptr;
 
@@ -37,6 +38,8 @@ PlayerAction MAIEngine::getAction()
 }
 
 void MAIEngine::update(){
+	if (UserConfigParams::m_training)
+		std::cout << "Training" << std::endl;
     //m_game_state->update();
 }
 

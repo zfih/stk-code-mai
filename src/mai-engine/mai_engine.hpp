@@ -28,6 +28,8 @@ private:
 	MAIAlgorithm* m_mai_algorithm;
 
 public:
+	bool training;
+	
 	MAIEngine();
 	~MAIEngine();
 
