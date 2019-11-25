@@ -19,6 +19,8 @@
 #define TARGET_UPDATE 10
 #define SAVE_MODEL 500
 
+const std::string modelName = "DQNmodel.pt";
+
 inline bool fileExists(const std::string& name) {
 	struct stat buffer;
 	return (stat(name.c_str(), &buffer) == 0);
@@ -27,10 +29,10 @@ inline bool fileExists(const std::string& name) {
 MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 	m_policyNet = model;
 
-	if (fileExists("DQNmodel.pt")) {
-		std::cout << "DQNmodel.pt existed. Loading the model.\n";
+	if (fileExists(modelName)) {
+		std::cout << modelName << " existed. Loading the model.\n";
 		torch::serialize::InputArchive inArchive = torch::serialize::InputArchive();
-		inArchive.load_from("DQNmodel.pt");
+		inArchive.load_from(modelName);
 		m_policyNet->getModule()->load(inArchive);
 	}
 
@@ -198,8 +200,8 @@ PlayerAction MAIDQNTrainer::runOnce() {
 		auto compilationUnit = std::make_shared<torch::jit::script::CompilationUnit>();
 		torch::serialize::OutputArchive outArchive = torch::serialize::OutputArchive(compilationUnit);
 		m_policyNet->getModule()->save(outArchive);
-		outArchive.save_to("DQNmodel.pt");
-		std::cout << "Saved the model to DQNmodel.pt\n";
+		outArchive.save_to(modelName);
+		std::cout << "Saved the model to " << modelName << "\n";
 	}
 
 	m_runOnceIteration++;
