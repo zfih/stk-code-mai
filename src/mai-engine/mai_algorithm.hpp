@@ -13,6 +13,7 @@ private:
 
 public:
 	virtual void run() = 0;
+	virtual PlayerAction runOnce() = 0;
 };
 
 #endif //SUPERTUXKART_MAI_ALGORITHM_HPP
