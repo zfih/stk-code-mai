@@ -8,6 +8,8 @@ class LocalPlayerController;
 
 class MAIController : public LocalPlayerController
 {
+private:
+	void resetActions();
 public:
 	MAIController(AbstractKart* kart, int local_player_id, HandicapLevel h);
 	~MAIController();

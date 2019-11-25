@@ -11,13 +11,14 @@ MAIController::~MAIController()
 
 void MAIController::update(int ticks) {
     m_mai_engine->update();
-	const PlayerAction act = m_mai_engine->getAction();
+	const ActionStruct act = m_mai_engine->getAction();
 
 	static unsigned long updateCount = 1;
 
 	//if (World::getWorld()->getPhase() == WorldStatus::RACE_PHASE || World::getWorld()->getPhase() == WorldStatus::SET_PHASE || World::getWorld()->getPhase() == WorldStatus::GO_PHASE)
-    if (World::getWorld()->getPhase() != WorldStatus::READY_PHASE)
-		MAIController::action(act, UINT16_MAX, false);
+	if (World::getWorld()->getPhase() != WorldStatus::READY_PHASE)
+		//MAIController::resetActions();
+		MAIController::action(act.action, act.value, false);
 
 	LocalPlayerController::update(ticks);
 	updateCount++;
@@ -33,4 +34,12 @@ bool MAIController::action(PlayerAction action, int value, bool dry_run)
     }
 
 	return LocalPlayerController::action(action, value);
+}
+
+void MAIController::resetActions()
+{
+	MAIController::action(PA_ACCEL, 0, false);
+	MAIController::action(PA_BRAKE, 0, false);
+	MAIController::action(PA_STEER_LEFT, 0, false);
+	MAIController::action(PA_STEER_RIGHT, 0, false);
 }

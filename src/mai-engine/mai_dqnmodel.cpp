@@ -11,26 +11,28 @@
 MAIDQNModel::MAIDQNModel()
 {
 	m_kartID = -1;
-	m_actions = { PlayerAction::PA_ACCEL, PlayerAction::PA_BRAKE, PlayerAction::PA_STEER_LEFT, PlayerAction::PA_STEER_RIGHT };
+	m_actions = { { PlayerAction::PA_ACCEL, 0 }, { PlayerAction::PA_ACCEL, UINT16_MAX }, { PlayerAction::PA_BRAKE, 0 }, 
+				  { PlayerAction::PA_BRAKE, UINT16_MAX }, { PlayerAction::PA_STEER_LEFT, 0 }, { PlayerAction::PA_STEER_LEFT, 0 },
+				  { PlayerAction::PA_STEER_RIGHT, 0 }, { PlayerAction::PA_STEER_RIGHT, UINT16_MAX } };
 	m_module = new torch::nn::Module();
 
 	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(2, 8));
 	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(8, 64));
 	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(64, 64));
-	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(64, /*Number of actions*/4));
+	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(64, /*Number of actions*/m_actions.size()));
 }
 
-MAIDQNModel::MAIDQNModel(int kartID)
-{
-	m_kartID = kartID;
-	m_actions = { PlayerAction::PA_ACCEL, PlayerAction::PA_BRAKE, PlayerAction::PA_STEER_LEFT, PlayerAction::PA_STEER_RIGHT };
-	m_module = new torch::nn::Module();
-
-	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(2, 8));
-	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(8, 64));
-	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(64, 64));
-	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(64, /*Number of actions*/4));
-}
+//MAIDQNModel::MAIDQNModel(int kartID)
+//{
+//	m_kartID = kartID;
+//	m_actions = { PlayerAction::PA_ACCEL, PlayerAction::PA_BRAKE, PlayerAction::PA_STEER_LEFT, PlayerAction::PA_STEER_RIGHT };
+//	m_module = new torch::nn::Module();
+//
+//	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(2, 8));
+//	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(8, 64));
+//	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(64, 64));
+//	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(64, /*Number of actions*/4));
+//}
 
 MAIDQNModel::~MAIDQNModel()
 {
@@ -45,7 +47,7 @@ torch::nn::Module* MAIDQNModel::getModule()
 	return m_module;
 }
 
-PlayerAction MAIDQNModel::getAction()
+ActionStruct MAIDQNModel::getAction()
 {
 	// Get the distance down the track for our kart
 	World *world = World::getWorld();
@@ -55,10 +57,10 @@ PlayerAction MAIDQNModel::getAction()
 	float toCenter = srWorld->getDistanceToCenterForKart(m_kartID);
 	float input[]{ downTrack, toCenter };
 
-	return getAction(input);
+	return m_actions[getAction(input)];
 }
 
-PlayerAction MAIDQNModel::getAction(float state[])
+int MAIDQNModel::getAction(float state[])
 {
 	// Forward the distance through the network
 	torch::Tensor x = pseudoForward(state);
@@ -69,7 +71,7 @@ PlayerAction MAIDQNModel::getAction(float state[])
 	// Return an action based on the network output
 	int highestVal = 0;
 
-	for (int i = 1; i < 4; i++) {
+	for (int i = 1; i < m_actions.size(); i++) {
 		auto test = theVals[i];
 		auto test2 = theVals[highestVal];
 		if (theVals[i] > theVals[highestVal]) {
@@ -77,7 +79,7 @@ PlayerAction MAIDQNModel::getAction(float state[])
 			highestVal = i;
 		}
 	}
-	return m_actions[highestVal];
+	return highestVal;
 }
 
 torch::Tensor MAIDQNModel::forward(torch::Tensor x) {
@@ -103,7 +105,7 @@ int MAIDQNModel::getNumActions()
 	return m_actions.size();
 }
 
-PlayerAction MAIDQNModel::getAction(int index)
+ActionStruct MAIDQNModel::getAction(int index)
 {
 	return m_actions[index];
 }

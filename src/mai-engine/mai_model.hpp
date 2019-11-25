@@ -8,11 +8,16 @@
 #include <torch/torch.h>
 #include "input/input.hpp"
 
+struct ActionStruct {
+	PlayerAction action;
+	uint16_t value;
+};
+
 class MAIModel {
 private:
 
 public:
-	virtual PlayerAction getAction(/*State state*/) = 0;
+	virtual ActionStruct getAction(/*State state*/) = 0;
 };
 
 #endif //SUPERTUXKART_MAI_MODEL_HPP
