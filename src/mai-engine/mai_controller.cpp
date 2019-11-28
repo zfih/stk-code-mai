@@ -1,4 +1,5 @@
 ﻿#include <modes/standard_race.hpp>
+#include <config/user_config.hpp>
 #include "mai_controller.hpp"
 
 
@@ -17,14 +18,19 @@ void MAIController::update(int ticks) {
     auto *srWorld = dynamic_cast<StandardRace*>(World::getWorld());
     float downTrack = srWorld->getDistanceDownTrackForKart(m_kart->getWorldKartId(),true);
     float downTrackNoChecklines = srWorld->getDistanceDownTrackForKart(m_kart->getWorldKartId(),false);
+    float distToMid = srWorld->getDistanceToCenterForKart(m_kart->getWorldKartId());
 
     static unsigned long updateCount = 1;
 
     std::stringstream ss;
-    ss << std::fixed << std::setprecision(4);
+    ss << std::fixed << std::setprecision(2);
     ss << std::setw(6) << updateCount; // update count
-    ss << " | Current distance down track: " << std::setw(9) << downTrack << "(" << std::setw(9) << downTrackNoChecklines << ")"; // distance down track
-    ss << " | Currently going '" << std::setw(14) << KartActionStrings[act.action] << "' at: " << std::setw(5) << act.value << " | ";
+    ss << " | " << std::setw(9) << downTrack << " (" << std::setw(9) << downTrackNoChecklines << ")"; // distance down track
+    ss << " | " << std::setw(9) << distToMid;
+    ss << " | " << std::setw(10) << KartActionStrings[act.action];
+    ss << " | " << std::setw(5) << act.value;
+    if(UserConfigParams::m_training) ss << " | [" << "t" << "]";
+    ss << " | ";
     std::string string = ss.str();
 
     std::cout << "\r" << string << std::flush;
