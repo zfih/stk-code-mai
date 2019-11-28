@@ -8,12 +8,13 @@
 #include "mai_dqntrainer.hpp"
 #include "modes/standard_race.hpp" // This should probably not be here.
 #include <math.h>
+#include <sys/stat.h>
 //#include <torch/csrc/jit/import.h>
 //#include <torch/csrc/jit/export.h>
 
 #define BATCH_SIZE 128
 #define GAMMA 0.999
-#define EPS_START 0.9
+#define EPS_START 0.5
 #define EPS_END 0.05
 #define EPS_DECAY 200
 #define TARGET_UPDATE 10
@@ -114,7 +115,7 @@ void MAIDQNTrainer::run() {
 		World *world = World::getWorld();
 		StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
 		float state[2];
-		state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(), /*Account for checklines? WTH is this?*/false);
+		state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(),true);
 		state[1] = 0.0f; // Placeholder
 		float startState = state[0];
 		bool raceDone = false;
@@ -152,7 +153,7 @@ ActionStruct MAIDQNTrainer::runOnce() {
 	if (world->getPhase() != world->RACE_PHASE && world->getPhase() != world->GO_PHASE) return { PA_ACCEL, 0 };
 	StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
 	float state[2];
-	state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(), /*Account for checklines? WTH is this?*/false);
+	state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(), true);
 	state[1] = srWorld->getDistanceToCenterForKart(m_policyNet->getKartID());
 
 	int actionInd = selectAction(state);

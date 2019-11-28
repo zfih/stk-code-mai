@@ -12,9 +12,9 @@ MAIModelTest::MAIModelTest(int kartID)
 
 MAIModelTest::~MAIModelTest(){ }
 
-PlayerAction MAIModelTest::getAction()
+ActionStruct MAIModelTest::getAction()
 {
-	return PlayerAction::PA_ACCEL;;
+	return {PlayerAction::PA_ACCEL, 0};
 }
 
 int MAIModelTest::getKartID()

@@ -11,9 +11,12 @@
 MAIDQNModel::MAIDQNModel()
 {
 	m_kartID = -1;
-	m_actions = { { PlayerAction::PA_ACCEL, 0 }, { PlayerAction::PA_ACCEL, UINT16_MAX }, { PlayerAction::PA_BRAKE, 0 }, 
-				  { PlayerAction::PA_BRAKE, UINT16_MAX }, { PlayerAction::PA_STEER_LEFT, 0 }, { PlayerAction::PA_STEER_LEFT, 0 },
-				  { PlayerAction::PA_STEER_RIGHT, 0 }, { PlayerAction::PA_STEER_RIGHT, UINT16_MAX } };
+	m_actions = {
+	        { PlayerAction::PA_ACCEL,       0 }, { PlayerAction::PA_ACCEL,         UINT16_MAX },
+	        { PlayerAction::PA_BRAKE,       0 }, { PlayerAction::PA_BRAKE,         UINT16_MAX },
+            { PlayerAction::PA_STEER_LEFT,  0 }, { PlayerAction::PA_STEER_LEFT,    UINT16_MAX },
+			{ PlayerAction::PA_STEER_RIGHT, 0 }, { PlayerAction::PA_STEER_RIGHT,   UINT16_MAX }
+	};
 	m_module = new torch::nn::Module();
 
 	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(2, 8));
@@ -53,7 +56,7 @@ ActionStruct MAIDQNModel::getAction()
 	World *world = World::getWorld();
 	if (m_kartID == -1) m_kartID = world->getPlayerKart(0)->getWorldKartId();
 	StandardRace *srWorld = dynamic_cast<StandardRace*>(world);
-	float downTrack = srWorld->getDistanceDownTrackForKart(m_kartID, /*Account for checklines? WTH is this?*/false);
+	float downTrack = srWorld->getDistanceDownTrackForKart(m_kartID, true);
 	float toCenter = srWorld->getDistanceToCenterForKart(m_kartID);
 	float input[]{ downTrack, toCenter };
 

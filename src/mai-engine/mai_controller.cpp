@@ -1,4 +1,5 @@
-﻿#include "mai_controller.hpp"
+﻿#include <modes/standard_race.hpp>
+#include "mai_controller.hpp"
 
 
 MAIController::MAIController(AbstractKart* kart, int local_player_id, HandicapLevel h) : LocalPlayerController(kart, local_player_id, h)
@@ -13,7 +14,20 @@ void MAIController::update(int ticks) {
     m_mai_engine->update();
 	const ActionStruct act = m_mai_engine->getAction();
 
-	static unsigned long updateCount = 1;
+    auto *srWorld = dynamic_cast<StandardRace*>(World::getWorld());
+    float downTrack = srWorld->getDistanceDownTrackForKart(m_kart->getWorldKartId(),true);
+    float downTrackNoChecklines = srWorld->getDistanceDownTrackForKart(m_kart->getWorldKartId(),false);
+
+    static unsigned long updateCount = 1;
+
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(4);
+    ss << std::setw(6) << updateCount; // update count
+    ss << " | Current distance down track: " << std::setw(9) << downTrack << "(" << std::setw(9) << downTrackNoChecklines << ")"; // distance down track
+    ss << " | Currently going '" << std::setw(14) << KartActionStrings[act.action] << "' at: " << std::setw(5) << act.value << " | ";
+    std::string string = ss.str();
+
+    std::cout << "\r" << string << std::flush;
 
 	//if (World::getWorld()->getPhase() == WorldStatus::RACE_PHASE || World::getWorld()->getPhase() == WorldStatus::SET_PHASE || World::getWorld()->getPhase() == WorldStatus::GO_PHASE)
 	if (World::getWorld()->getPhase() != WorldStatus::READY_PHASE)
