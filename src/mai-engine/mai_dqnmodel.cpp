@@ -68,9 +68,17 @@ int MAIDQNModel::getAction(float state[])
 	// Forward the distance through the network
 	torch::Tensor x = pseudoForward(state);
 
-	//std::cout << x.accessor<float,1>() << "\n";
-	auto theVals = x.accessor<float, 1>();
+	/*for (int i = 1; i < m_actions.size(); i++) {
+		std::cout << i << ": " << theVals[i] << "\n";
+	}*/
 
+	//std::cout << x.accessor<float,1>() << "\n";
+
+	return chooseBest(x.accessor<float, 1>());
+}
+
+int MAIDQNModel::chooseBest(torch::TensorAccessor<float, 1Ui64, torch::DefaultPtrTraits, long long> theVals)
+{
 	// Return an action based on the network output
 	int highestVal = 0;
 
@@ -78,11 +86,26 @@ int MAIDQNModel::getAction(float state[])
 		auto test = theVals[i];
 		auto test2 = theVals[highestVal];
 		if (theVals[i] > theVals[highestVal]) {
-		//if (x[0][i].item<float>() < x[0][highestVal].item<float>()) {
+			//if (x[0][i].item<float>() < x[0][highestVal].item<float>()) {
 			highestVal = i;
 		}
 	}
 	return highestVal;
+}
+
+int MAIDQNModel::chooseProbability(torch::TensorAccessor<float, 1Ui64, torch::DefaultPtrTraits, long long> theVals)
+{
+	// Return an action based on the network output
+	float sample = (rand() % 100) / 100.0f;
+	float valSum = 0.0f;
+
+	for (int i = 0; i < m_actions.size(); i++) {
+		valSum += theVals[i];
+		if (sample < valSum) {
+			//if (x[0][i].item<float>() < x[0][highestVal].item<float>()) {
+			return i;
+		}
+	}
 }
 
 torch::Tensor MAIDQNModel::forward(torch::Tensor x) {

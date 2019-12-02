@@ -9,6 +9,9 @@
 
 class MAIDQNModel : public MAIModel/*, public torch::nn::Module*/ {
 private:
+	int chooseBest(torch::TensorAccessor<float, 1Ui64, torch::DefaultPtrTraits, long long> theVals);
+	int chooseProbability(torch::TensorAccessor<float, 1Ui64, torch::DefaultPtrTraits, long long> theVals);
+
 	int m_kartID;
 	std::vector<ActionStruct> m_actions;
 
