@@ -6,13 +6,15 @@
 #define SUPERTUXKART_MAI_DQNMODEL_HPP
 
 #include "mai_model.hpp"
+#include "karts/abstract_kart.hpp"
 
 class MAIDQNModel : public MAIModel/*, public torch::nn::Module*/ {
 private:
-	int chooseBest(torch::TensorAccessor<float, 1Ui64, torch::DefaultPtrTraits, long long> theVals);
-	int chooseProbability(torch::TensorAccessor<float, 1Ui64, torch::DefaultPtrTraits, long long> theVals);
+	int chooseBest(torch::TensorAccessor<float, 1, torch::DefaultPtrTraits, int64_t> theVals);
+	int chooseProbability(torch::TensorAccessor<float, 1, torch::DefaultPtrTraits, int64_t> theVals);
 
 	int m_kartID;
+	AbstractKart* m_kart;
 	std::vector<ActionStruct> m_actions;
 
 	torch::nn::Module *m_module;

@@ -152,9 +152,10 @@ ActionStruct MAIDQNTrainer::runOnce() {
 	World* world = World::getWorld();
 	if (world->getPhase() != world->RACE_PHASE && world->getPhase() != world->GO_PHASE) return { PA_ACCEL, 0 };
 	StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
-	float state[2];
+	float state[3];
 	state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(), true);
 	state[1] = srWorld->getDistanceToCenterForKart(m_policyNet->getKartID());
+	state[2] = srWorld->getKart(m_policyNet->getKartID())->getRotation().getAngle();
 
 	int actionInd = selectAction(state);
 	
