@@ -68,13 +68,14 @@ int MAIDQNModel::getAction(float state[])
 	// Forward the distance through the network
 	torch::Tensor x = pseudoForward(state);
 
-	/*for (int i = 1; i < m_actions.size(); i++) {
+	auto theVals = x.accessor<float, 1>();
+	for (int i = 1; i < m_actions.size(); i++) {
 		std::cout << i << ": " << theVals[i] << "\n";
-	}*/
+	}
 
 	//std::cout << x.accessor<float,1>() << "\n";
 
-	return chooseBest(x.accessor<float, 1>());
+	return chooseBest(theVals);
 }
 
 int MAIDQNModel::chooseBest(torch::TensorAccessor<float, 1Ui64, torch::DefaultPtrTraits, long long> theVals)

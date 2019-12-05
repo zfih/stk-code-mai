@@ -13,6 +13,7 @@ private:
 	void optimiseModel();
 	int selectAction(float state[]);
 	void saveToTargetModel();
+	void addFakeReplayData();
 
 	MAIDQNModel *m_policyNet;
 	MAIDQNModel *m_targetNet;

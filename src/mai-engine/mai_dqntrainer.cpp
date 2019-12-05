@@ -14,13 +14,13 @@
 
 #define BATCH_SIZE 128
 #define GAMMA 0.999
-#define EPS_START 0.5
+#define EPS_START 1.0
 #define EPS_END 0.05
-#define EPS_DECAY 200
+#define EPS_DECAY 100000
 #define TARGET_UPDATE 10
 #define SAVE_MODEL 500
 
-const std::string modelName = "DQNPOCmodel.pt";
+const std::string modelName = "test.pt";
 
 inline bool fileExists(const std::string& name) {
 	struct stat buffer;
@@ -49,6 +49,8 @@ MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 	m_lastState[1] = -1.0f;
 	m_lastActionIndex = -1;
 	m_runOnceIteration = 0;
+
+	//addFakeReplayData();
 }
 
 int MAIDQNTrainer::selectAction(float state[]) {
@@ -103,6 +105,12 @@ void MAIDQNTrainer::optimiseModel() {
 	torch::Tensor expectedStateValues = (nextStateValues * GAMMA) + rewardTensor;
 
 	auto loss = torch::smooth_l1_loss(stateActionValues, expectedStateValues.unsqueeze(1));
+	
+	/*std::ofstream stream;
+	stream.open("loss.txt");
+	stream << m_stepsDone << "," << loss.accessor<float, 1>()[0] << "\n";
+	stream.close();
+	std::cout << "Loss:\n" << loss << "\n";*/
 
 	m_optimiser->zero_grad();
 	loss.backward();
@@ -152,6 +160,16 @@ ActionStruct MAIDQNTrainer::runOnce() {
 	World* world = World::getWorld();
 	if (world->getPhase() != world->RACE_PHASE && world->getPhase() != world->GO_PHASE) return { PA_ACCEL, 0 };
 	StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
+	if (m_runOnceIteration % 7200 == 0 && m_runOnceIteration != 0) {
+		m_runOnceIteration++;
+		std::cout << "\nRestarting race\n";
+		srWorld->reset(true);
+		return m_policyNet->getAction(0);
+	}
+	if (m_runOnceIteration >= 240000) {
+		srWorld->scheduleExitRace();
+		std::cout << "\nExiting race.\n";
+	}
 	float state[2];
 	state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(), true);
 	state[1] = srWorld->getDistanceToCenterForKart(m_policyNet->getKartID());
@@ -208,4 +226,27 @@ void MAIDQNTrainer::saveToTargetModel() {
 	torch::serialize::InputArchive inArchive = torch::serialize::InputArchive();
 	inArchive.load_from("tempPolicyToTarget.pt");
 	m_targetNet->getModule()->load(inArchive);
+}
+
+void MAIDQNTrainer::addFakeReplayData() {
+	for (int i = 0; i < BATCH_SIZE * 2; i++) {
+		float randomDownTrack = rand() % 1170;
+		float randomToCenter = (rand() % 20) - 10;
+		replayMemory.states.push_back(randomDownTrack);
+		replayMemory.states.push_back(randomToCenter);
+		replayMemory.nextStates.push_back(randomDownTrack + 1);
+		replayMemory.nextStates.push_back(randomToCenter + signbit(randomToCenter));
+		if (i % 2 == 0) {
+			replayMemory.actionIndices.push_back(1);
+			replayMemory.rewards.push_back(10);
+		}
+		else {
+			int randAction;
+			do {
+				randAction = rand() % m_policyNet->getNumActions();
+			} while (randAction == 1);
+			replayMemory.actionIndices.push_back(randAction);
+			replayMemory.rewards.push_back(0);
+		}
+	}
 }
