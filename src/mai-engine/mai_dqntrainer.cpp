@@ -20,8 +20,8 @@
 #define TARGET_UPDATE 10
 #define SAVE_MODEL 500
 
-#define RESETRACE true
-#define REALDATA false
+#define RESETRACE false
+#define REALDATA true
 
 const std::string modelName = "test.pt";
 
@@ -59,7 +59,8 @@ MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 
 int MAIDQNTrainer::selectAction(float state[]) {
 	float sample = (rand() % 100) / 100.0f;
-	float eps_threshold = EPS_END + (EPS_START - EPS_END) * pow(M_E, -1. * m_stepsDone / EPS_DECAY);
+	const float pre_comp = EPS_END + (EPS_START - EPS_END);
+	float eps_threshold = pre_comp * pow(M_E, -1. * m_stepsDone / EPS_DECAY);
 	m_stepsDone += 1;
 	if (sample > eps_threshold)
 		return m_policyNet->getAction(state);
@@ -101,7 +102,7 @@ void MAIDQNTrainer::optimiseModel() {
 	actionTensor = torch::_cast_Long(actionTensor);
 	actionTensor = actionTensor.reshape({ 128, 1 });
 	//std::cout << actionTensor << "\n";
-	nextStateTensor = nextStateTensor.reshape({ 128,2 });
+	nextStateTensor = nextStateTensor.reshape({ 128, 2 });
 	//std::cout << m_policyNet->forward(stateTensor) << "\n";
 
 	torch::Tensor stateActionValues = m_policyNet->forward(stateTensor).gather(1, actionTensor);
@@ -199,6 +200,7 @@ ActionStruct MAIDQNTrainer::runOnce() {
         replayMemory.nextStates.push_back(state[0]);
         replayMemory.nextStates.push_back(state[1]);
         replayMemory.rewards.push_back(state[0] - m_lastState[0]);
+        //std::cout << replayMemory.rewards.back();
 	}
 
 	//std::cout << "Experienced reward of " << state[0] << " - " << m_lastState[0] << " = " << state[0] - m_lastState[0] << "\n";

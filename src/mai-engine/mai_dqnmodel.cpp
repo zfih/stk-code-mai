@@ -72,9 +72,9 @@ int MAIDQNModel::getAction(float state[])
 	torch::Tensor x = pseudoForward(state);
 
 	auto theVals = x.accessor<float, 1>();
-	for (int i = 1; i < m_actions.size(); i++) {
-		std::cout << i << ": " << theVals[i] << "\n";
-	}
+//	for (int i = 1; i < m_actions.size(); i++) {
+//		std::cout << i << ": " << theVals[i] << "\n";
+//	}
 
 	//std::cout << x.accessor<float,1>() << "\n";
 	return chooseBest(theVals);

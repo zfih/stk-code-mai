@@ -1,6 +1,7 @@
 ﻿#include <modes/standard_race.hpp>
 #include <config/user_config.hpp>
 #include "mai_controller.hpp"
+#include "mai_dqntrainer.hpp"
 
 
 MAIController::MAIController(AbstractKart* kart, int local_player_id, HandicapLevel h) : LocalPlayerController(kart, local_player_id, h)
@@ -12,8 +13,14 @@ MAIController::~MAIController()
 = default;
 
 void MAIController::update(int ticks) {
-    m_mai_engine->update();
-	const ActionStruct act = m_mai_engine->getAction();
+    static unsigned long updateCount = 1;
+
+    static ActionStruct act;
+
+    if(updateCount % 20 == 0){
+        m_mai_engine->update();
+        act = m_mai_engine->getAction();
+    }
 
     auto *srWorld = dynamic_cast<StandardRace*>(World::getWorld());
     float downTrack = srWorld->getDistanceDownTrackForKart(m_kart->getWorldKartId(),true);
@@ -21,14 +28,21 @@ void MAIController::update(int ticks) {
     float distToMid = srWorld->getDistanceToCenterForKart(m_kart->getWorldKartId());
 	float turn = m_kart->getHeading();
 
-	
-	
-    static unsigned long updateCount = 1;
+    float dist2 = srWorld->getOverallDistance(m_kart->getWorldKartId());
+    float dist3 = dist2 * 2 - abs(downTrackNoChecklines);
+    float trackLength = Track::getCurrentTrack()->getTrackLength();
+    float dist4 = dist2 + downTrackNoChecklines - trackLength;
+//    auto test = srWorld
 
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2);
     ss << std::setw(6) << updateCount; // update count
     ss << " | " << std::setw(9) << downTrack << " (" << std::setw(9) << downTrackNoChecklines << ")"; // distance down track
+    ss << " | " << std::setw(9) << dist2;
+    ss << " | " << std::setw(9) << dist3;
+    ss << " | " << std::setw(9) << trackLength;
+    ss << " | " << std::setw(9) << dist4;
+    ss << " ||||";
     ss << " | " << std::setw(9) << distToMid;
     ss << " | " << std::setw(10) << KartActionStrings[act.action];
     ss << " | " << std::setw(5) << act.value;
@@ -40,9 +54,10 @@ void MAIController::update(int ticks) {
     std::cout << "\r" << string << std::flush;
 
 	//if (World::getWorld()->getPhase() == WorldStatus::RACE_PHASE || World::getWorld()->getPhase() == WorldStatus::SET_PHASE || World::getWorld()->getPhase() == WorldStatus::GO_PHASE)
-	if (World::getWorld()->getPhase() != WorldStatus::READY_PHASE)
-		//MAIController::resetActions();
-		MAIController::action(act.action, act.value, false);
+    if(updateCount % 20 == 0) {
+        if (World::getWorld()->getPhase() != WorldStatus::READY_PHASE)
+            MAIController::action(act.action, act.value, false);
+    }
 
 	LocalPlayerController::update(ticks);
 	updateCount++;

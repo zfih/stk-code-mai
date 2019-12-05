@@ -30,6 +30,7 @@ private:
 		std::vector<float> nextStates;
 		std::vector<float> rewards;
 	} replayMemory;
+
 public:
 	MAIDQNTrainer(MAIDQNModel *model);
 	//~MAIDQNTrainer();
