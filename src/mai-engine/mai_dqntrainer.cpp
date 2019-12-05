@@ -20,6 +20,9 @@
 #define TARGET_UPDATE 10
 #define SAVE_MODEL 500
 
+#define RESETRACE true
+#define REALDATA false
+
 const std::string modelName = "test.pt";
 
 inline bool fileExists(const std::string& name) {
@@ -50,7 +53,8 @@ MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 	m_lastActionIndex = -1;
 	m_runOnceIteration = 0;
 
-	//addFakeReplayData();
+	if(!REALDATA)
+	    addFakeReplayData();
 }
 
 int MAIDQNTrainer::selectAction(float state[]) {
@@ -160,16 +164,19 @@ ActionStruct MAIDQNTrainer::runOnce() {
 	World* world = World::getWorld();
 	if (world->getPhase() != world->RACE_PHASE && world->getPhase() != world->GO_PHASE) return { PA_ACCEL, 0 };
 	StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
-	if (m_runOnceIteration % 7200 == 0 && m_runOnceIteration != 0) {
-		m_runOnceIteration++;
-		std::cout << "\nRestarting race\n";
-		srWorld->reset(true);
-		return m_policyNet->getAction(0);
+	if(RESETRACE){
+        if (m_runOnceIteration % 7200 == 0 && m_runOnceIteration != 0) {
+            m_runOnceIteration++;
+            std::cout << "\nRestarting race\n";
+            srWorld->reset(true);
+            return m_policyNet->getAction(0);
+        }
+        if (m_runOnceIteration >= 240000) {
+            srWorld->scheduleExitRace();
+            std::cout << "\nExiting race.\n";
+        }
 	}
-	if (m_runOnceIteration >= 240000) {
-		srWorld->scheduleExitRace();
-		std::cout << "\nExiting race.\n";
-	}
+
 	float state[3];
 	state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(), true);
 	state[1] = srWorld->getDistanceToCenterForKart(m_policyNet->getKartID());
@@ -185,12 +192,15 @@ ActionStruct MAIDQNTrainer::runOnce() {
 		return m_policyNet->getAction(actionInd);
 	}
 
-	replayMemory.states.push_back(m_lastState[0]);
-	replayMemory.states.push_back(m_lastState[1]);
-	replayMemory.actionIndices.push_back(m_lastActionIndex);
-	replayMemory.nextStates.push_back(state[0]);
-	replayMemory.nextStates.push_back(state[1]);
-	replayMemory.rewards.push_back(state[0] - m_lastState[0]);
+	if(REALDATA){
+        replayMemory.states.push_back(m_lastState[0]);
+        replayMemory.states.push_back(m_lastState[1]);
+        replayMemory.actionIndices.push_back(m_lastActionIndex);
+        replayMemory.nextStates.push_back(state[0]);
+        replayMemory.nextStates.push_back(state[1]);
+        replayMemory.rewards.push_back(state[0] - m_lastState[0]);
+	}
+
 	//std::cout << "Experienced reward of " << state[0] << " - " << m_lastState[0] << " = " << state[0] - m_lastState[0] << "\n";
 
 	m_lastState[0] = state[0];
