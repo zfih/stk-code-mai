@@ -4,6 +4,8 @@
 #include "mai_dqntrainer.hpp"
 
 
+class m_no;
+
 MAIController::MAIController(AbstractKart* kart, int local_player_id, HandicapLevel h) : LocalPlayerController(kart, local_player_id, h)
 {
 	m_mai_engine = new MAIEngine();
@@ -17,7 +19,7 @@ void MAIController::update(int ticks) {
 
     static ActionStruct act;
 
-    if(updateCount % 20 == 0){
+    if(!UserConfigParams::m_mai_no_network && updateCount % 20 == 0){
         m_mai_engine->update();
         act = m_mai_engine->getAction();
     }
@@ -27,21 +29,15 @@ void MAIController::update(int ticks) {
     float downTrackNoChecklines = srWorld->getDistanceDownTrackForKart(m_kart->getWorldKartId(),false);
     float distToMid = srWorld->getDistanceToCenterForKart(m_kart->getWorldKartId());
 	float turn = m_kart->getHeading();
-
-    float dist2 = srWorld->getOverallDistance(m_kart->getWorldKartId());
-    float dist3 = dist2 * 2 - abs(downTrackNoChecklines);
     float trackLength = Track::getCurrentTrack()->getTrackLength();
-    float dist4 = dist2 + downTrackNoChecklines - trackLength;
-//    auto test = srWorld
+
+    downTrack = downTrack > 0.0f ? downTrack : -(trackLength - downTrackNoChecklines);
+    downTrack += trackLength * srWorld->getFinishedLapsOfKart(m_kart->getWorldKartId());
 
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2);
     ss << std::setw(6) << updateCount; // update count
     ss << " | " << std::setw(9) << downTrack << " (" << std::setw(9) << downTrackNoChecklines << ")"; // distance down track
-    ss << " | " << std::setw(9) << dist2;
-    ss << " | " << std::setw(9) << dist3;
-    ss << " | " << std::setw(9) << trackLength;
-    ss << " | " << std::setw(9) << dist4;
     ss << " ||||";
     ss << " | " << std::setw(9) << distToMid;
     ss << " | " << std::setw(10) << KartActionStrings[act.action];
@@ -54,7 +50,7 @@ void MAIController::update(int ticks) {
     std::cout << "\r" << string << std::flush;
 
 	//if (World::getWorld()->getPhase() == WorldStatus::RACE_PHASE || World::getWorld()->getPhase() == WorldStatus::SET_PHASE || World::getWorld()->getPhase() == WorldStatus::GO_PHASE)
-    if(updateCount % 20 == 0) {
+    if(!UserConfigParams::m_mai_no_network && updateCount % 20 == 0) {
         if (World::getWorld()->getPhase() != WorldStatus::READY_PHASE)
             MAIController::action(act.action, act.value, false);
     }

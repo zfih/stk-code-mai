@@ -385,7 +385,9 @@ enum MultitouchControls
 namespace UserConfigParams
 {
 	PARAM_PREFIX bool m_training PARAM_DEFAULT(BoolUserConfigParam(false, "training"));
-	
+	PARAM_PREFIX bool m_mai_controller PARAM_DEFAULT(BoolUserConfigParam(true, "mai_controller on"));
+	PARAM_PREFIX bool m_mai_no_network PARAM_DEFAULT(BoolUserConfigParam(false, "mai_controller taking user input only"));
+
     // ---- Audio
     PARAM_PREFIX GroupUserConfigParam        m_audio_group
             PARAM_DEFAULT( GroupUserConfigParam("Audio", "Audio Settings") );

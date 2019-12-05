@@ -960,6 +960,11 @@ int handleCmdLine(bool has_server_config, bool has_parent_process)
 
 	if (CommandLine::has("--training"))
 		UserConfigParams::m_training = true;
+
+	if (CommandLine::has("--no-mai"))
+		UserConfigParams::m_mai_controller = false;
+	if (CommandLine::has("--no-mai-network"))
+		UserConfigParams::m_mai_no_network = true;
 	
     if (CommandLine::has("--unit-testing"))
         UserConfigParams::m_unit_testing = true;

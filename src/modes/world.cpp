@@ -487,7 +487,7 @@ std::shared_ptr<AbstractKart> World::createKart
                 ai = new SkiddingAI(new_kart.get());
             controller = new NetworkAIController(new_kart.get(),
                                                  local_player_id, ai);*/
-			if(true)
+			if(UserConfigParams::m_mai_controller)
 			{
 				controller = new MAIController(new_kart.get(),
 					local_player_id, handicap);
