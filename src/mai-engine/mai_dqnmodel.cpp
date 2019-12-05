@@ -23,6 +23,7 @@ MAIDQNModel::MAIDQNModel()
 	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(8, 64));
 	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(64, 64));
 	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(64, /*Number of actions*/m_actions.size()));
+	m_kart = nullptr;
 }
 
 //MAIDQNModel::MAIDQNModel(int kartID)
@@ -55,10 +56,12 @@ ActionStruct MAIDQNModel::getAction()
 	// Get the distance down the track for our kart
 	World *world = World::getWorld();
 	if (m_kartID == -1) m_kartID = world->getPlayerKart(0)->getWorldKartId();
+	if (m_kart == nullptr) m_kart = world->getPlayerKart(m_kartID);
 	StandardRace *srWorld = dynamic_cast<StandardRace*>(world);
 	float downTrack = srWorld->getDistanceDownTrackForKart(m_kartID, true);
 	float toCenter = srWorld->getDistanceToCenterForKart(m_kartID);
-	float input[]{ downTrack, toCenter };
+	float rotation = m_kart->getRotation().getAngle();
+	float input[]{ downTrack, toCenter, rotation };
 
 	return m_actions[getAction(input)];
 }
@@ -74,11 +77,10 @@ int MAIDQNModel::getAction(float state[])
 	}
 
 	//std::cout << x.accessor<float,1>() << "\n";
-
 	return chooseBest(theVals);
 }
 
-int MAIDQNModel::chooseBest(torch::TensorAccessor<float, 1Ui64, torch::DefaultPtrTraits, long long> theVals)
+int MAIDQNModel::chooseBest(torch::TensorAccessor<float, 1, torch::DefaultPtrTraits, int64_t> theVals)
 {
 	// Return an action based on the network output
 	int highestVal = 0;
@@ -94,7 +96,7 @@ int MAIDQNModel::chooseBest(torch::TensorAccessor<float, 1Ui64, torch::DefaultPt
 	return highestVal;
 }
 
-int MAIDQNModel::chooseProbability(torch::TensorAccessor<float, 1Ui64, torch::DefaultPtrTraits, long long> theVals)
+int MAIDQNModel::chooseProbability(torch::TensorAccessor<float, 1, torch::DefaultPtrTraits, int64_t> theVals)
 {
 	// Return an action based on the network output
 	float sample = (rand() % 100) / 100.0f;

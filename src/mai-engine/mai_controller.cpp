@@ -19,7 +19,10 @@ void MAIController::update(int ticks) {
     float downTrack = srWorld->getDistanceDownTrackForKart(m_kart->getWorldKartId(),true);
     float downTrackNoChecklines = srWorld->getDistanceDownTrackForKart(m_kart->getWorldKartId(),false);
     float distToMid = srWorld->getDistanceToCenterForKart(m_kart->getWorldKartId());
+	float turn = m_kart->getHeading();
 
+	
+	
     static unsigned long updateCount = 1;
 
     std::stringstream ss;
@@ -29,6 +32,7 @@ void MAIController::update(int ticks) {
     ss << " | " << std::setw(9) << distToMid;
     ss << " | " << std::setw(10) << KartActionStrings[act.action];
     ss << " | " << std::setw(5) << act.value;
+	ss << " | " << std::setw(5) << turn;
     if(UserConfigParams::m_training) ss << " | [" << "t" << "]";
     ss << " | ";
     std::string string = ss.str();
