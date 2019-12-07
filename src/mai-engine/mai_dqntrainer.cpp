@@ -20,10 +20,10 @@
 #define TARGET_UPDATE 10
 #define SAVE_MODEL 500
 
-#define RESETRACE false
+#define RESETRACE true
 #define REALDATA true
 
-const std::string modelName = "test.pt";
+const std::string modelName = "BiggerNetworkSparserOptimizations.pt";
 
 inline bool fileExists(const std::string& name) {
 	struct stat buffer;
@@ -117,9 +117,11 @@ void MAIDQNTrainer::optimiseModel() {
 	stream.close();
 	std::cout << "Loss:\n" << loss << "\n";*/
 
+	//std::cout << m_policyNet->forward(stateTensor) << "\n";
 	m_optimiser->zero_grad();
 	loss.backward();
 	m_optimiser->step();
+	//std::cout << "---\n" << m_policyNet->forward(stateTensor) << "\n";
 }
 
 void MAIDQNTrainer::run() {
