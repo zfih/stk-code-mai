@@ -19,7 +19,7 @@ MAIDQNModel::MAIDQNModel()
 	};
 	m_module = new torch::nn::Module();
 
-	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(2, 128));
+	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(3, 128));
 	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(128, 128));
 	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(128, 128));
 	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(128, /*Number of actions*/m_actions.size()));

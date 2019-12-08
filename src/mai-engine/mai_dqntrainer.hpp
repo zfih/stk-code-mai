@@ -19,15 +19,15 @@ private:
 	MAIDQNModel *m_targetNet;
 	int m_stepsDone;
 	torch::optim::Optimizer *m_optimiser;
-	float m_lastState[2];
+	StateStruct m_lastState;
 	int m_lastActionIndex;
 	int m_runOnceIteration;
 	
 	struct
 	{
-		std::vector<float> states;
+		std::vector<StateStruct> states;
 		std::vector<int> actionIndices;
-		std::vector<float> nextStates;
+		std::vector<StateStruct> nextStates;
 		std::vector<float> rewards;
 	} replayMemory;
 

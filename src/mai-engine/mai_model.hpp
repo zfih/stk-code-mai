@@ -13,6 +13,12 @@ struct ActionStruct {
 	uint16_t value;
 };
 
+struct StateStruct {
+	float downTrack;
+	float distToMid;
+	float rotation;
+};
+
 class MAIModel {
 private:
 
