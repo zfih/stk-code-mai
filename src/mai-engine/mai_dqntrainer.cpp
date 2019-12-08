@@ -24,7 +24,7 @@
 #define RESETRACE true
 #define REALDATA true
 
-const std::string modelName = "test.pt";
+const std::string modelName = "WithRotation.pt";
 
 inline bool fileExists(const std::string& name) {
 	struct stat buffer;
@@ -101,7 +101,7 @@ void MAIDQNTrainer::optimiseModel() {
 	}
 
 	stateTensor = stateTensor.reshape({ 128, 3 });
-	std::cout << stateTensor << "\n";
+	//std::cout << stateTensor << "\n";
 	actionTensor = torch::_cast_Long(actionTensor);
 	actionTensor = actionTensor.reshape({ 128, 1 });
 	//std::cout << actionTensor << "\n";

@@ -141,7 +141,7 @@ ActionStruct MAIDQNModel::getAction(int index)
 
 torch::Tensor MAIDQNModel::pseudoForward(float state[])
 {
-	torch::Tensor t = torch::cat({ torch::tensor(state[0]), torch::tensor(state[1]) }, 0);
+	torch::Tensor t = torch::cat({ torch::tensor(state[0]), torch::tensor(state[1]), torch::tensor(state[2]) }, 0);
 
 	//std::cout << t << "\n";
 
