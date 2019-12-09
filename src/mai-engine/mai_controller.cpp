@@ -17,7 +17,7 @@ MAIController::~MAIController()
 void MAIController::update(int ticks) {
     static unsigned long updateCount = 1;
 
-    static ActionStruct act;
+    static std::vector<PlayerAction> act;
 
     if(!UserConfigParams::m_mai_no_network && updateCount % 20 == 0){
         m_mai_engine->update();
@@ -40,8 +40,16 @@ void MAIController::update(int ticks) {
     ss << " | " << std::setw(9) << downTrack << " (" << std::setw(9) << downTrackNoChecklines << ")"; // distance down track
     ss << " ||||";
     ss << " | " << std::setw(9) << distToMid;
-    ss << " | " << std::setw(10) << KartActionStrings[act.action];
-    ss << " | " << std::setw(5) << act.value;
+	if (act.size() > 0) {
+		ss << " | " << std::setw(10) << KartActionStrings[act[0]];
+		if (act.size() > 1) {
+			ss << " | " << std::setw(10) << KartActionStrings[act[1]];
+		}
+		else {
+			ss << " | " << std::setw(10) << "None";
+		}
+	}
+	//ss << " | " << std::setw(5) << act.value;
 	ss << " | " << std::setw(5) << turn;
     if(UserConfigParams::m_training) ss << " | [" << "t" << "]";
     ss << " | ";
@@ -50,10 +58,14 @@ void MAIController::update(int ticks) {
     std::cout << "\r" << string << std::flush;
 
 	//if (World::getWorld()->getPhase() == WorldStatus::RACE_PHASE || World::getWorld()->getPhase() == WorldStatus::SET_PHASE || World::getWorld()->getPhase() == WorldStatus::GO_PHASE)
-    if(!UserConfigParams::m_mai_no_network && updateCount % 20 == 0) {
-        if (World::getWorld()->getPhase() != WorldStatus::READY_PHASE)
-            MAIController::action(act.action, act.value, false);
-    }
+	if (!UserConfigParams::m_mai_no_network && updateCount % 20 == 0) {
+		if (World::getWorld()->getPhase() != WorldStatus::READY_PHASE) {
+			MAIController::resetActions();
+			for (PlayerAction pAct : act) {
+				MAIController::action(pAct, UINT16_MAX, false);
+			}
+		}
+	}
 
 	LocalPlayerController::update(ticks);
 	updateCount++;

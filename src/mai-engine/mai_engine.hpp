@@ -33,7 +33,7 @@ public:
 	MAIEngine();
 	~MAIEngine();
 
-	ActionStruct getAction();
+	std::vector<PlayerAction> getAction();
 	static MAIEngine *getMAIEngine();
 
     void update();

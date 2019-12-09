@@ -8,10 +8,10 @@
 #include <torch/torch.h>
 #include "input/input.hpp"
 
-struct ActionStruct {
-	PlayerAction action;
-	uint16_t value;
-};
+//struct ActionStruct {
+//	PlayerAction action;
+//	uint16_t value;
+//};
 
 struct StateStruct {
 	float downTrack;
@@ -23,7 +23,7 @@ class MAIModel {
 private:
 
 public:
-	virtual ActionStruct getAction(/*State state*/) = 0;
+	virtual std::vector<PlayerAction> getAction(/*State state*/) = 0;
 };
 
 #endif //SUPERTUXKART_MAI_MODEL_HPP

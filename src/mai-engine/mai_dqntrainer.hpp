@@ -35,7 +35,7 @@ public:
 	MAIDQNTrainer(MAIDQNModel *model);
 	//~MAIDQNTrainer();
 	void run();
-	ActionStruct runOnce();
+	std::vector<PlayerAction> runOnce();
 };
 
 #endif //SUPERTUXKART_MAI_DQNTRAINER_HPP

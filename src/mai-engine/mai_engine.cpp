@@ -32,7 +32,7 @@ MAIEngine::~MAIEngine()
 	m_mai_engine = nullptr;
 }
 
-ActionStruct MAIEngine::getAction()
+std::vector<PlayerAction> MAIEngine::getAction()
 {
 	//return PlayerAction::PA_ACCEL;
 	/*m_mai_algorithm->run();

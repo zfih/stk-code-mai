@@ -15,7 +15,7 @@ private:
 
 	int m_kartID;
 	AbstractKart* m_kart;
-	std::vector<ActionStruct> m_actions;
+	std::vector<std::vector<PlayerAction>> m_actions;
 
 	torch::nn::Module *m_module;
 	std::shared_ptr<torch::nn::LinearImpl> m_inLayer;
@@ -28,13 +28,13 @@ public:
 	~MAIDQNModel();
 
 	torch::nn::Module *getModule();
-	ActionStruct getAction(/*State state*/);
+	std::vector<PlayerAction> getAction(/*State state*/);
 	int getAction(float state[]);
 	torch::Tensor pseudoForward(float state[]);
 	torch::Tensor forward(torch::Tensor x);
 	int getKartID();
 	int getNumActions();
-	ActionStruct getAction(int index);
+	std::vector<PlayerAction> getAction(int index);
 };
 
 #endif //SUPERTUXKART_MAI_MDQNODEL_HPP

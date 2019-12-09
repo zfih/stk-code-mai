@@ -12,10 +12,9 @@ MAIDQNModel::MAIDQNModel()
 {
 	m_kartID = -1;
 	m_actions = {
-	        { PlayerAction::PA_ACCEL,       0 }, { PlayerAction::PA_ACCEL,         UINT16_MAX },
-	        { PlayerAction::PA_BRAKE,       0 }, { PlayerAction::PA_BRAKE,         UINT16_MAX },
-            { PlayerAction::PA_STEER_LEFT,  0 }, { PlayerAction::PA_STEER_LEFT,    UINT16_MAX },
-			{ PlayerAction::PA_STEER_RIGHT, 0 }, { PlayerAction::PA_STEER_RIGHT,   UINT16_MAX }
+	        { PlayerAction::PA_ACCEL }, { PlayerAction::PA_BRAKE }, { PlayerAction::PA_STEER_LEFT }, { PlayerAction::PA_STEER_RIGHT },
+			{ PlayerAction::PA_ACCEL, PlayerAction::PA_STEER_LEFT }, { PlayerAction::PA_ACCEL, PlayerAction::PA_STEER_RIGHT },
+			{ PlayerAction::PA_BRAKE, PlayerAction::PA_STEER_LEFT }, { PlayerAction::PA_BRAKE, PlayerAction::PA_STEER_RIGHT }
 	};
 	m_module = new torch::nn::Module();
 
@@ -51,7 +50,7 @@ torch::nn::Module* MAIDQNModel::getModule()
 	return m_module;
 }
 
-ActionStruct MAIDQNModel::getAction()
+std::vector<PlayerAction> MAIDQNModel::getAction()
 {
 	// Get the distance down the track for our kart
 	World *world = World::getWorld();
@@ -134,7 +133,7 @@ int MAIDQNModel::getNumActions()
 	return m_actions.size();
 }
 
-ActionStruct MAIDQNModel::getAction(int index)
+std::vector<PlayerAction> MAIDQNModel::getAction(int index)
 {
 	return m_actions[index];
 }

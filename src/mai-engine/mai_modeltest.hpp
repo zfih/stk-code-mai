@@ -15,7 +15,7 @@ public:
 	MAIModelTest(int kartID);
 	~MAIModelTest();
 
-	ActionStruct getAction(/*State state*/);
+	std::vector<PlayerAction> getAction(/*State state*/);
 	int getKartID();
 };
 

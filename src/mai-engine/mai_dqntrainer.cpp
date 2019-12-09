@@ -24,7 +24,7 @@
 #define RESETRACE true
 #define REALDATA true
 
-const std::string modelName = "WithRotation.pt";
+const std::string modelName = "NewActionScheme.pt";
 
 inline bool fileExists(const std::string& name) {
 	struct stat buffer;
@@ -166,9 +166,9 @@ void MAIDQNTrainer::run() {
 	std::cout << "Running is fun :D\n";
 }
 
-ActionStruct MAIDQNTrainer::runOnce() {
+std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
 	World* world = World::getWorld();
-	if (world->getPhase() != world->RACE_PHASE && world->getPhase() != world->GO_PHASE) return { PA_ACCEL, 0 };
+	if (world->getPhase() != world->RACE_PHASE && world->getPhase() != world->GO_PHASE) return { PA_NITRO };
 	StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
 	if(RESETRACE){
         if (m_runOnceIteration % 7200 == 0 && m_runOnceIteration != 0) {
@@ -220,7 +220,7 @@ ActionStruct MAIDQNTrainer::runOnce() {
 	//std::cout << "Experienced reward of " << state[0] << " - " << m_lastState[0] << " = " << state[0] - m_lastState[0] << "\n";
 
 	m_lastState = { state[0], state[1], state[2] };
-	ActionStruct tmpAction = m_policyNet->getAction(m_lastActionIndex);
+	std::vector<PlayerAction> tmpAction = m_policyNet->getAction(m_lastActionIndex);
 	m_lastActionIndex = actionInd;
 
 	optimiseModel();
