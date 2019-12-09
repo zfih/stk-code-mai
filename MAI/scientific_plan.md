@@ -47,8 +47,16 @@
  - Added rotation as an input
  - Cleaned up distance down track
  - Result:
-	- ...
-	
+	- The same as for experiment 3
  - Conclusion:
-	- 
- 
+	- We see no difference in the decision making.
+
+## Experiment 4 - Different control scheme
+ - The current control scheme could be problematic. If an action of { accelerate, max } is chosen, the kart keeps accelerating while other actions are being taken, affecting the reward.
+ - Hypothesis: Reward values will make more sense if the effect of actions are confined to each call to the network's getAction().
+ - Changed available actions to accel, brake, steer left, steer right, combinations of accel and steering, and combinations of brake and steering.
+ - Changed MAIController to reset all actions before taking an action.
+ - Result:
+	- ...
+ - Conclusion:
+	- ...
