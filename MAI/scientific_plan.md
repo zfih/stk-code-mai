@@ -57,6 +57,6 @@
  - Changed available actions to accel, brake, steer left, steer right, combinations of accel and steering, and combinations of brake and steering.
  - Changed MAIController to reset all actions before taking an action.
  - Result:
-	- ...
+	- Learned to only accelerate and turn right at the same time
  - Conclusion:
-	- ...
+	- The agent still doens't have a good base for decision making
