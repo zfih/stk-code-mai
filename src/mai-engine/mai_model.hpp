@@ -21,12 +21,12 @@ struct StateStruct {
 	float velY;
 	float velZ;
 
-	// queueing
-	unsigned long id;
-    bool operator<(const StateStruct& rhs) const
-    {
-        return id < rhs.id;
-    }
+	//// queueing
+	//unsigned long id;
+	//bool operator<(const StateStruct& rhs) const
+	//{
+	//    return id < rhs.id;
+	//}
 };
 
 class MAIModel {
