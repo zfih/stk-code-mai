@@ -10,8 +10,7 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <tracks/track.hpp>
-//#include <torch/csrc/jit/import.h>
-//#include <torch/csrc/jit/export.h>
+#include <config/user_config.hpp>
 
 #define BATCH_SIZE 128
 #define GAMMA 0.999
@@ -56,7 +55,7 @@ MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 	    addFakeReplayData();
 }
 
-int MAIDQNTrainer::selectAction(float state[]) {
+int MAIDQNTrainer::selectAction(StateStruct state) {
 	float sample = (rand() % 100) / 100.0f;
 	const float pre_comp = EPS_END + (EPS_START - EPS_END);
 	float eps_threshold = pre_comp * pow(M_E, -1. * m_stepsDone / EPS_DECAY);
@@ -73,43 +72,59 @@ int MAIDQNTrainer::selectAction(float state[]) {
 void MAIDQNTrainer::optimiseModel() {
 	if (replayMemory.states.size() < BATCH_SIZE) return;
 
-	torch::Tensor stateTensor /*= torch::zeros({128, 1})*/;
+	torch::Tensor stateTensor;/*= torch::zeros({128, 1})*/;
 	torch::Tensor actionTensor;
 	torch::Tensor rewardTensor;
 	torch::Tensor nextStateTensor;
 
+	bool firstElement = true;
+
 	for (int i = 0; i < BATCH_SIZE; i++) {
 		//std::cout << i << "\n";
 		int sample = rand() % replayMemory.actionIndices.size();
+		if (sample < UserConfigParams::m_mai_num_observations)
+			sample = UserConfigParams::m_mai_num_observations;
+		int sampleCopy = sample;
 
-		if (i == 0) {
-			stateTensor = torch::cat({ torch::tensor(replayMemory.states[sample].downTrack), torch::tensor(replayMemory.states[sample].distToMid),
-									   torch::tensor(replayMemory.states[sample].rotation), torch::tensor(replayMemory.states[sample].velX),
-									   torch::tensor(replayMemory.states[sample].velY), torch::tensor(replayMemory.states[sample].velZ) }, 0);
-			actionTensor = torch::tensor(replayMemory.actionIndices[sample]);
-			rewardTensor = torch::tensor(replayMemory.rewards[sample]);
-			nextStateTensor = torch::cat({ torch::tensor(replayMemory.nextStates[sample].downTrack), torch::tensor(replayMemory.nextStates[sample].distToMid),
-									       torch::tensor(replayMemory.nextStates[sample].rotation), torch::tensor(replayMemory.nextStates[sample].velX),
-										   torch::tensor(replayMemory.nextStates[sample].velY), torch::tensor(replayMemory.nextStates[sample].velZ) });
-			continue;
+		if (UserConfigParams::m_mai_stack_observations) {
+			sample -= (UserConfigParams::m_mai_num_observations - 1);
 		}
 
-		stateTensor = torch::cat({ stateTensor, torch::tensor(replayMemory.states[sample].downTrack), torch::tensor(replayMemory.states[sample].distToMid),
-								   torch::tensor(replayMemory.states[sample].rotation), torch::tensor(replayMemory.states[sample].velX),
-								   torch::tensor(replayMemory.states[sample].velY), torch::tensor(replayMemory.states[sample].velZ) }, 0);
-		actionTensor = torch::cat({ actionTensor, torch::tensor(replayMemory.actionIndices[sample]) }, 0);
-		rewardTensor = torch::cat({ rewardTensor, torch::tensor(replayMemory.rewards[sample]) }, 0);
-		nextStateTensor = torch::cat({ nextStateTensor, torch::tensor(replayMemory.nextStates[sample].downTrack), torch::tensor(replayMemory.nextStates[sample].distToMid),
-									   torch::tensor(replayMemory.nextStates[sample].rotation), torch::tensor(replayMemory.nextStates[sample].velX),
-									   torch::tensor(replayMemory.nextStates[sample].velY), torch::tensor(replayMemory.nextStates[sample].velZ) }, 0);
+		if (firstElement) {
+			stateTensor = torch::cat({ torch::tensor(replayMemory.states[sample].downTrack), torch::tensor(replayMemory.states[sample].distToMid),
+										torch::tensor(replayMemory.states[sample].rotation), torch::tensor(replayMemory.states[sample].velX),
+										torch::tensor(replayMemory.states[sample].velY), torch::tensor(replayMemory.states[sample].velZ) }, 0);
+
+			nextStateTensor = torch::cat({ torch::tensor(replayMemory.nextStates[sample].downTrack), torch::tensor(replayMemory.nextStates[sample].distToMid),
+											torch::tensor(replayMemory.nextStates[sample].rotation), torch::tensor(replayMemory.nextStates[sample].velX),
+											torch::tensor(replayMemory.nextStates[sample].velY), torch::tensor(replayMemory.nextStates[sample].velZ) });
+			actionTensor = torch::tensor(replayMemory.actionIndices[sampleCopy]);
+			rewardTensor = torch::tensor(replayMemory.rewards[sampleCopy]);
+			firstElement = false;
+			sample++;
+		} else {
+			actionTensor = torch::cat({ actionTensor, torch::tensor(replayMemory.actionIndices[sampleCopy]) }, 0);
+			rewardTensor = torch::cat({ rewardTensor, torch::tensor(replayMemory.rewards[sampleCopy]) }, 0);
+		}
+		while (sample <= sampleCopy) {
+			stateTensor = torch::cat({ stateTensor, torch::tensor(replayMemory.states[sample].downTrack), torch::tensor(replayMemory.states[sample].distToMid),
+										torch::tensor(replayMemory.states[sample].rotation), torch::tensor(replayMemory.states[sample].velX),
+										torch::tensor(replayMemory.states[sample].velY), torch::tensor(replayMemory.states[sample].velZ) }, 0);
+
+			nextStateTensor = torch::cat({ nextStateTensor, torch::tensor(replayMemory.nextStates[sample].downTrack), torch::tensor(replayMemory.nextStates[sample].distToMid),
+											torch::tensor(replayMemory.nextStates[sample].rotation), torch::tensor(replayMemory.nextStates[sample].velX),
+											torch::tensor(replayMemory.nextStates[sample].velY), torch::tensor(replayMemory.nextStates[sample].velZ) }, 0);
+			sample++;
+		}
 	}
 
-	stateTensor = stateTensor.reshape({ 128, 6 });
+	int inputs = UserConfigParams::m_mai_stack_observations ? 6 * UserConfigParams::m_mai_num_observations : 6;
+	stateTensor = stateTensor.reshape({ 128, inputs });
 	//std::cout << stateTensor << "\n";
 	actionTensor = torch::_cast_Long(actionTensor);
 	actionTensor = actionTensor.reshape({ 128, 1 });
 	//std::cout << actionTensor << "\n";
-	nextStateTensor = nextStateTensor.reshape({ 128, 6 });
+	nextStateTensor = nextStateTensor.reshape({ 128, inputs });
 	//std::cout << m_policyNet->forward(stateTensor) << "\n";
 
 	torch::Tensor stateActionValues = m_policyNet->forward(stateTensor).gather(1, actionTensor);
@@ -132,42 +147,42 @@ void MAIDQNTrainer::optimiseModel() {
 }
 
 void MAIDQNTrainer::run() {
-	for (int i = 0; i < 50; i++) {
-		// TODO reset world
-		World *world = World::getWorld();
-		StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
-		float state[2];
-		state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(),true);
-		state[1] = 0.0f; // Placeholder
-		float startState = state[0];
-		bool raceDone = false;
-		while (!raceDone) {
-			int actionIndex = selectAction(state);
-			// TODO perform the action
-			float nextState[2];
-			nextState[0] = state[0] + 1.0f; // Placeholder
-			nextState[1] = state[1]; // Placeholder
-			float reward = 1.0f; // Placeholder
-			bool done = (state[0] > startState + 50.0f); // Placeholder // Floating point comparison might be a problem :(
-			
-			/*replayMemory.states.push_back(state[0]);
-			replayMemory.states.push_back(state[1]);
-			replayMemory.actionIndices.push_back(actionIndex);
-			replayMemory.nextStates.push_back(nextState[0]);
-			replayMemory.nextStates.push_back(nextState[1]);
-			replayMemory.rewards.push_back(reward);*/
+	//for (int i = 0; i < 50; i++) {
+	//	// TODO reset world
+	//	World *world = World::getWorld();
+	//	StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
+	//	float state[2];
+	//	state[0] = srWorld->getDistanceDownTrackForKart(m_policyNet->getKartID(),true);
+	//	state[1] = 0.0f; // Placeholder
+	//	float startState = state[0];
+	//	bool raceDone = false;
+	//	while (!raceDone) {
+	//		int actionIndex = selectAction(state);
+	//		// TODO perform the action
+	//		float nextState[2];
+	//		nextState[0] = state[0] + 1.0f; // Placeholder
+	//		nextState[1] = state[1]; // Placeholder
+	//		float reward = 1.0f; // Placeholder
+	//		bool done = (state[0] > startState + 50.0f); // Placeholder // Floating point comparison might be a problem :(
+	//		
+	//		/*replayMemory.states.push_back(state[0]);
+	//		replayMemory.states.push_back(state[1]);
+	//		replayMemory.actionIndices.push_back(actionIndex);
+	//		replayMemory.nextStates.push_back(nextState[0]);
+	//		replayMemory.nextStates.push_back(nextState[1]);
+	//		replayMemory.rewards.push_back(reward);*/
 
-			state[0] = nextState[0];
-			state[1] = nextState[1];
+	//		state[0] = nextState[0];
+	//		state[1] = nextState[1];
 
-			optimiseModel();
-			if (done) break;
-		}
-		if (i % TARGET_UPDATE == 0) {
-			saveToTargetModel();
-		}
-	}
-	std::cout << "Running is fun :D\n";
+	//		optimiseModel();
+	//		if (done) break;
+	//	}
+	//	if (i % TARGET_UPDATE == 0) {
+	//		saveToTargetModel();
+	//	}
+	//}
+	//std::cout << "Running is fun :D\n";
 }
 
 std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
@@ -199,41 +214,28 @@ std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
 
 	btVector3 velocity = srWorld->getKart(kartID)->getVelocity();
 
-	float state[6];
-	state[0] = downTrack;
-	state[1] = distToMid;
-	state[2] = turn;
-	state[3] = velocity.x();
-	state[4] = velocity.y();
-	state[5] = velocity.z();
+	StateStruct state = { downTrack, distToMid, turn, velocity.x(), velocity.y(), velocity.z() };
 
 	int actionInd = selectAction(state);
 	
 	if (m_runOnceIteration == 0) {
-		m_lastState.downTrack = state[0];
-		m_lastState.distToMid = state[1];
-		m_lastState.rotation = state[2];
-		m_lastState.velX = state[3];
-		m_lastState.velY = state[4];
-		m_lastState.velZ = state[5];
+		m_lastState = state;
 		m_lastActionIndex = actionInd;
 		m_runOnceIteration++;
 		return m_policyNet->getAction(actionInd);
 	}
 
-	StateStruct thisState = { state[0], state[1], state[2], state[3], state[4], state[5] };
-
 	if(REALDATA){
         replayMemory.states.push_back(m_lastState);
         replayMemory.actionIndices.push_back(m_lastActionIndex);
-		replayMemory.nextStates.push_back(thisState);
-        replayMemory.rewards.push_back(thisState.downTrack - m_lastState.downTrack);
+		replayMemory.nextStates.push_back(state);
+        replayMemory.rewards.push_back(state.downTrack - m_lastState.downTrack);
         //std::cout << replayMemory.rewards.back();
 	}
 
 	//std::cout << "Experienced reward of " << state[0] << " - " << m_lastState[0] << " = " << state[0] - m_lastState[0] << "\n";
 
-	m_lastState = thisState;
+	m_lastState = state;
 	std::vector<PlayerAction> tmpAction = m_policyNet->getAction(m_lastActionIndex);
 	m_lastActionIndex = actionInd;
 

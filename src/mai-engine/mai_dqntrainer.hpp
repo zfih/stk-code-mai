@@ -11,7 +11,7 @@
 class MAIDQNTrainer : public MAIAlgorithm {
 private:
 	void optimiseModel();
-	int selectAction(float state[]);
+	int selectAction(StateStruct state);
 	void saveToTargetModel();
 	void addFakeReplayData();
 

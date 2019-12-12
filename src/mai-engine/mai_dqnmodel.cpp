@@ -7,6 +7,7 @@
 #include "mai_dqnmodel.hpp"
 #include "modes/standard_race.hpp" // This should probably not be here.
 #include "karts/abstract_kart.hpp"
+#include "config/user_config.hpp"
 
 MAIDQNModel::MAIDQNModel()
 {
@@ -18,11 +19,14 @@ MAIDQNModel::MAIDQNModel()
 	};
 	m_module = new torch::nn::Module();
 
-	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(6, 128));
+	int inputs = UserConfigParams::m_mai_stack_observations ? 6 * UserConfigParams::m_mai_num_observations : 6;
+	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(inputs, 128));
 	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(128, 128));
 	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(128, 128));
 	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(128, /*Number of actions*/m_actions.size()));
 	m_kart = nullptr;
+	stateHistory = std::vector<StateStruct>();
+	oldestStateHist = 0;
 }
 
 //MAIDQNModel::MAIDQNModel(int kartID)
@@ -61,12 +65,23 @@ std::vector<PlayerAction> MAIDQNModel::getAction()
 	float toCenter = srWorld->getDistanceToCenterForKart(m_kartID);
 	float rotation = m_kart->getRotation().getAngle();
 	btVector3 velocity = srWorld->getKart(m_kartID)->getVelocity();
-	float input[]{ downTrack, toCenter, rotation, velocity.x(), velocity.y(), velocity.z() };
+	StateStruct input = { downTrack, toCenter, rotation, velocity.x(), velocity.y(), velocity.z() };
+
+	if (UserConfigParams::m_mai_stack_observations) {
+		if (stateHistory.size() < UserConfigParams::m_mai_num_observations) {
+			stateHistory.push_back(input);
+			return std::vector<PlayerAction>(PA_NITRO);
+		}
+		stateHistory.erase(stateHistory.begin());
+		stateHistory.push_back(input);
+		++oldestStateHist %= UserConfigParams::m_mai_num_observations;
+		return m_actions[getActionStacked(stateHistory)];
+	}
 
 	return m_actions[getAction(input)];
 }
 
-int MAIDQNModel::getAction(float state[])
+int MAIDQNModel::getAction(StateStruct state)
 {
 	// Forward the distance through the network
 	torch::Tensor x = pseudoForward(state);
@@ -77,6 +92,23 @@ int MAIDQNModel::getAction(float state[])
 //	}
 
 	//std::cout << x.accessor<float,1>() << "\n";
+	return chooseBest(theVals);
+}
+
+int MAIDQNModel::getActionStacked(std::vector<StateStruct> states)
+{
+	torch::Tensor t = torch::cat({ torch::tensor(states[0].downTrack), torch::tensor(states[0].distToMid),
+								   torch::tensor(states[0].rotation), torch::tensor(states[0].velX),
+								   torch::tensor(states[0].velY), torch::tensor(states[0].velZ) }, 0);
+		
+	for (int i = 0; i < UserConfigParams::m_mai_num_observations; i++) {
+		t = torch::cat({ t, torch::tensor(states[i].downTrack), torch::tensor(states[i].distToMid),
+						 torch::tensor(states[i].rotation), torch::tensor(states[i].velX),
+						 torch::tensor(states[i].velY), torch::tensor(states[i].velZ) }, 0);
+	}
+
+	torch::Tensor x = forward(t);
+	auto theVals = x.accessor<float, 1>();
 	return chooseBest(theVals);
 }
 
@@ -139,10 +171,11 @@ std::vector<PlayerAction> MAIDQNModel::getAction(int index)
 	return m_actions[index];
 }
 
-torch::Tensor MAIDQNModel::pseudoForward(float state[])
+torch::Tensor MAIDQNModel::pseudoForward(StateStruct state)
 {
-	torch::Tensor t = torch::cat({ torch::tensor(state[0]), torch::tensor(state[1]), torch::tensor(state[2]), 
-								   torch::tensor(state[3]), torch::tensor(state[4]), torch::tensor(state[5]) }, 0);
+	torch::Tensor t = torch::cat({ torch::tensor(state.downTrack), torch::tensor(state.distToMid), 
+								   torch::tensor(state.rotation), torch::tensor(state.velX), 
+								   torch::tensor(state.velY), torch::tensor(state.velZ) }, 0);
 
 	//std::cout << t << "\n";
 

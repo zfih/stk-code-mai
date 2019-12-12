@@ -16,6 +16,8 @@ private:
 	int m_kartID;
 	AbstractKart* m_kart;
 	std::vector<std::vector<PlayerAction>> m_actions;
+	std::vector<StateStruct> stateHistory;
+	int oldestStateHist;
 
 	torch::nn::Module *m_module;
 	std::shared_ptr<torch::nn::LinearImpl> m_inLayer;
@@ -29,8 +31,9 @@ public:
 
 	torch::nn::Module *getModule();
 	std::vector<PlayerAction> getAction(/*State state*/);
-	int getAction(float state[]);
-	torch::Tensor pseudoForward(float state[]);
+	int getAction(StateStruct state);
+	int getActionStacked(std::vector<StateStruct> states);
+	torch::Tensor pseudoForward(StateStruct state);
 	torch::Tensor forward(torch::Tensor x);
 	int getKartID();
 	int getNumActions();
