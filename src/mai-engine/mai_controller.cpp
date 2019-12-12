@@ -51,6 +51,7 @@ void MAIController::update(int ticks) {
 	}
 	//ss << " | " << std::setw(5) << act.value;
 	ss << " | " << std::setw(5) << turn;
+	ss << " | " << std::setw(5) << m_kart->getVelocity().x() << ", " << std::setw(5) << m_kart->getVelocity().y() << ", " << std::setw(5) << m_kart->getVelocity().z();
     if(UserConfigParams::m_training) ss << " | [" << "t" << "]";
     ss << " | ";
     std::string string = ss.str();

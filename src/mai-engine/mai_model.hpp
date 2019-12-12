@@ -17,6 +17,9 @@ struct StateStruct {
 	float downTrack;
 	float distToMid;
 	float rotation;
+	float velX;
+	float velY;
+	float velZ;
 };
 
 class MAIModel {

@@ -18,7 +18,7 @@ MAIDQNModel::MAIDQNModel()
 	};
 	m_module = new torch::nn::Module();
 
-	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(3, 128));
+	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(6, 128));
 	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(128, 128));
 	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(128, 128));
 	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(128, /*Number of actions*/m_actions.size()));
@@ -60,7 +60,8 @@ std::vector<PlayerAction> MAIDQNModel::getAction()
 	float downTrack = srWorld->getDistanceDownTrackForKart(m_kartID, true);
 	float toCenter = srWorld->getDistanceToCenterForKart(m_kartID);
 	float rotation = m_kart->getRotation().getAngle();
-	float input[]{ downTrack, toCenter, rotation };
+	btVector3 velocity = srWorld->getKart(m_kartID)->getVelocity();
+	float input[]{ downTrack, toCenter, rotation, velocity.x(), velocity.y(), velocity.z() };
 
 	return m_actions[getAction(input)];
 }
@@ -140,7 +141,8 @@ std::vector<PlayerAction> MAIDQNModel::getAction(int index)
 
 torch::Tensor MAIDQNModel::pseudoForward(float state[])
 {
-	torch::Tensor t = torch::cat({ torch::tensor(state[0]), torch::tensor(state[1]), torch::tensor(state[2]) }, 0);
+	torch::Tensor t = torch::cat({ torch::tensor(state[0]), torch::tensor(state[1]), torch::tensor(state[2]), 
+								   torch::tensor(state[3]), torch::tensor(state[4]), torch::tensor(state[5]) }, 0);
 
 	//std::cout << t << "\n";
 
