@@ -70,7 +70,9 @@ std::vector<PlayerAction> MAIDQNModel::getAction()
 	float rotation = m_kart->getHeading();
 	float trackLength = Track::getCurrentTrack()->getTrackLength();
 	downTrack = downTrack > 0.0f ? downTrack : -(trackLength - downTrackNoChecklines);
-	downTrack += trackLength * srWorld->getFinishedLapsOfKart(m_kartID); // TODO: getFinishedLapsOfKart() can return -1. Account for that.
+	int finishedLaps = srWorld->getFinishedLapsOfKart(m_kartID);
+	if (finishedLaps < 0) finishedLaps = 0;
+	downTrack += trackLength * finishedLaps;
 	btVector3 velocity = srWorld->getKart(m_kartID)->getVelocity();
 	StateStruct input = { downTrack, toCenter, rotation, velocity.x(), velocity.y(), velocity.z() };
 

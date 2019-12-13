@@ -32,7 +32,9 @@ void MAIController::update(int ticks) {
     float trackLength = Track::getCurrentTrack()->getTrackLength();
 
     downTrack = downTrack > 0.0f ? downTrack : -(trackLength - downTrackNoChecklines);
-    downTrack += trackLength * srWorld->getFinishedLapsOfKart(m_kart->getWorldKartId());
+	int finishedLaps = srWorld->getFinishedLapsOfKart(m_kart->getWorldKartId());
+	if (finishedLaps < 0) finishedLaps = 0;
+    downTrack += trackLength * finishedLaps;
 
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2);

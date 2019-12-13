@@ -210,7 +210,9 @@ std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
 	float trackLength = Track::getCurrentTrack()->getTrackLength();
 
 	downTrack = downTrack > 0.0f ? downTrack : -(trackLength - downTrackNoChecklines);
-	downTrack += trackLength * srWorld->getFinishedLapsOfKart(kartID);
+	int finishedLaps = srWorld->getFinishedLapsOfKart(kartID);
+	if (finishedLaps < 0) finishedLaps = 0;
+	downTrack += trackLength * finishedLaps;
 
 	btVector3 velocity = srWorld->getKart(kartID)->getVelocity();
 
