@@ -127,8 +127,8 @@ void MAIDQNTrainer::optimiseModel() {
 	nextStateTensor = nextStateTensor.reshape({ 128, inputs });
 	//std::cout << m_policyNet->forward(stateTensor) << "\n";
 
-	torch::Tensor stateActionValues = m_policyNet->forward(stateTensor).gather(1, actionTensor);
-	torch::Tensor nextStateValues = std::get<0>(m_targetNet->forward(nextStateTensor).max(1)).detach();
+	torch::Tensor stateActionValues = m_policyNet->forward(stateTensor, 1).gather(1, actionTensor);
+	torch::Tensor nextStateValues = std::get<0>(m_targetNet->forward(nextStateTensor, 1).max(1)).detach();
 	torch::Tensor expectedStateValues = (nextStateValues * GAMMA) + rewardTensor;
 
 	auto loss = torch::smooth_l1_loss(stateActionValues, expectedStateValues.unsqueeze(1));

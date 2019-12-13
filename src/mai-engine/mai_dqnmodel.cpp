@@ -8,6 +8,9 @@
 #include "modes/standard_race.hpp" // This should probably not be here.
 #include "karts/abstract_kart.hpp"
 #include "config/user_config.hpp"
+#include <tracks/track.hpp>
+
+#define NUM_INPUTS 6
 
 MAIDQNModel::MAIDQNModel()
 {
@@ -19,14 +22,14 @@ MAIDQNModel::MAIDQNModel()
 	};
 	m_module = new torch::nn::Module();
 
-	int inputs = UserConfigParams::m_mai_stack_observations ? 6 * UserConfigParams::m_mai_num_observations : 6;
+	int inputs = UserConfigParams::m_mai_stack_observations ? NUM_INPUTS * UserConfigParams::m_mai_num_observations : NUM_INPUTS;
 	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(inputs, 128));
 	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(128, 128));
 	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(128, 128));
 	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(128, /*Number of actions*/m_actions.size()));
 	m_kart = nullptr;
 	stateHistory = std::vector<StateStruct>();
-	oldestStateHist = 0;
+	//oldestStateHist = 0;
 }
 
 //MAIDQNModel::MAIDQNModel(int kartID)
@@ -62,8 +65,12 @@ std::vector<PlayerAction> MAIDQNModel::getAction()
 	if (m_kart == nullptr) m_kart = world->getPlayerKart(m_kartID);
 	StandardRace *srWorld = dynamic_cast<StandardRace*>(world);
 	float downTrack = srWorld->getDistanceDownTrackForKart(m_kartID, true);
+	float downTrackNoChecklines = srWorld->getDistanceDownTrackForKart(m_kartID, false);
 	float toCenter = srWorld->getDistanceToCenterForKart(m_kartID);
-	float rotation = m_kart->getRotation().getAngle();
+	float rotation = m_kart->getHeading();
+	float trackLength = Track::getCurrentTrack()->getTrackLength();
+	downTrack = downTrack > 0.0f ? downTrack : -(trackLength - downTrackNoChecklines);
+	downTrack += trackLength * srWorld->getFinishedLapsOfKart(m_kartID); // TODO: getFinishedLapsOfKart() can return -1. Account for that.
 	btVector3 velocity = srWorld->getKart(m_kartID)->getVelocity();
 	StateStruct input = { downTrack, toCenter, rotation, velocity.x(), velocity.y(), velocity.z() };
 
@@ -74,7 +81,7 @@ std::vector<PlayerAction> MAIDQNModel::getAction()
 		}
 		stateHistory.erase(stateHistory.begin());
 		stateHistory.push_back(input);
-		++oldestStateHist %= UserConfigParams::m_mai_num_observations;
+		//++oldestStateHist %= UserConfigParams::m_mai_num_observations;
 		return m_actions[getActionStacked(stateHistory)];
 	}
 
@@ -101,13 +108,13 @@ int MAIDQNModel::getActionStacked(std::vector<StateStruct> states)
 								   torch::tensor(states[0].rotation), torch::tensor(states[0].velX),
 								   torch::tensor(states[0].velY), torch::tensor(states[0].velZ) }, 0);
 		
-	for (int i = 0; i < UserConfigParams::m_mai_num_observations; i++) {
+	for (int i = 1; i < UserConfigParams::m_mai_num_observations; i++) {
 		t = torch::cat({ t, torch::tensor(states[i].downTrack), torch::tensor(states[i].distToMid),
 						 torch::tensor(states[i].rotation), torch::tensor(states[i].velX),
 						 torch::tensor(states[i].velY), torch::tensor(states[i].velZ) }, 0);
 	}
 
-	torch::Tensor x = forward(t);
+	torch::Tensor x = forward(t, 0);
 	auto theVals = x.accessor<float, 1>();
 	return chooseBest(theVals);
 }
@@ -118,8 +125,8 @@ int MAIDQNModel::chooseBest(torch::TensorAccessor<float, 1, torch::DefaultPtrTra
 	int highestVal = 0;
 
 	for (int i = 1; i < m_actions.size(); i++) {
-		auto test = theVals[i];
-		auto test2 = theVals[highestVal];
+		//auto test = theVals[i];
+		//auto test2 = theVals[highestVal];
 		if (theVals[i] > theVals[highestVal]) {
 			//if (x[0][i].item<float>() < x[0][highestVal].item<float>()) {
 			highestVal = i;
@@ -143,11 +150,12 @@ int MAIDQNModel::chooseProbability(torch::TensorAccessor<float, 1, torch::Defaul
 	}
 }
 
-torch::Tensor MAIDQNModel::forward(torch::Tensor x) {
+torch::Tensor MAIDQNModel::forward(torch::Tensor x, int dim) {
 	x = torch::relu(m_inLayer->forward(x)); // Maybe not ReLU?
 	x = torch::relu(m_hiddenLayerOne->forward(x));
 	x = torch::relu(m_hiddenLayerTwo->forward(x));
-	return torch::softmax(m_outLayer->forward(x), /*dim=*/1);
+	x = torch::softmax(m_outLayer->forward(x), /*dim=*/dim);
+	return x;
 }
 
 int MAIDQNModel::getKartID()
