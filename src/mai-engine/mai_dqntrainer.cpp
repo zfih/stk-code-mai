@@ -24,6 +24,7 @@
 #define REALDATA true
 
 const std::string modelName = "test.pt";
+const std::string lossName = "loss.txt";
 
 inline bool fileExists(const std::string& name) {
 	struct stat buffer;
@@ -32,6 +33,11 @@ inline bool fileExists(const std::string& name) {
 
 MAIDQNTrainer::MAIDQNTrainer(MAIDQNModel *model) {
 	m_policyNet = model;
+
+	if (UserConfigParams::m_training && fileExists(lossName)) {
+		std::cout << lossName << " would have been overwritten by training. Aborting.\n";
+		throw 909;
+	}
 
 	if (fileExists(modelName)) {
 		std::cout << modelName << " existed. Loading the model.\n";
@@ -63,6 +69,20 @@ int MAIDQNTrainer::selectAction(StateStruct state) {
 	if (sample > eps_threshold)
 		return m_policyNet->getAction(state);
 	else 
+	{
+		return rand() % m_policyNet->getNumActions();
+		//return m_policyNet->getAction(ind);
+	}
+}
+
+int MAIDQNTrainer::selectActionStacked(std::vector<StateStruct> states) {
+	float sample = (rand() % 100) / 100.0f;
+	const float pre_comp = EPS_END + (EPS_START - EPS_END);
+	float eps_threshold = pre_comp * pow(M_E, -1. * m_stepsDone / EPS_DECAY);
+	m_stepsDone += 1;
+	if (sample > eps_threshold)
+		return m_policyNet->getActionStacked(states);
+	else
 	{
 		return rand() % m_policyNet->getNumActions();
 		//return m_policyNet->getAction(ind);
@@ -133,11 +153,11 @@ void MAIDQNTrainer::optimiseModel() {
 
 	auto loss = torch::smooth_l1_loss(stateActionValues, expectedStateValues.unsqueeze(1));
 	
-	/*std::ofstream stream;
-	stream.open("loss.txt");
-	stream << m_stepsDone << "," << loss.accessor<float, 1>()[0] << "\n";
+	std::ofstream stream;
+	stream.open("loss.txt", std::ios::app);
+	stream << m_stepsDone << "," << loss.item<float>() << "\n";
 	stream.close();
-	std::cout << "Loss:\n" << loss << "\n";*/
+	std::cout << "Loss:\n" << loss << "\n";
 
 	//std::cout << m_policyNet->forward(stateTensor) << "\n";
 	m_optimiser->zero_grad();
@@ -218,7 +238,19 @@ std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
 
 	StateStruct state = { downTrack, distToMid, turn, velocity.x(), velocity.y(), velocity.z() };
 
-	int actionInd = selectAction(state);
+	int actionInd = -1;
+	if (UserConfigParams::m_mai_stack_observations) {
+		std::vector<StateStruct> stateVector = std::vector<StateStruct>();
+		if (replayMemory.nextStates.size() > UserConfigParams::m_mai_num_observations) {
+			for (int i = UserConfigParams::m_mai_num_observations - 2; i >= 0; i--) {
+				stateVector.push_back(replayMemory.nextStates[i]);
+			}
+			stateVector.push_back(state);
+		}
+		actionInd = selectActionStacked(stateVector);
+	} else {
+		actionInd = selectAction(state);
+	}
 	
 	if (m_runOnceIteration == 0) {
 		m_lastState = state;

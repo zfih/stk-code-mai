@@ -12,6 +12,7 @@ class MAIDQNTrainer : public MAIAlgorithm {
 private:
 	void optimiseModel();
 	int selectAction(StateStruct state);
+	int selectActionStacked(std::vector<StateStruct> states);
 	void saveToTargetModel();
 	void addFakeReplayData();
 
