@@ -59,4 +59,14 @@
  - Result:
 	- Learned to only accelerate and turn right at the same time
  - Conclusion:
-	- The agent still doens't have a good base for decision making
+	- The agent still doesn't have a good base for decision making
+
+## Experiment 5 - Velocity as input
+ - It might be hard for the agent to choose the right action without know how fast it is already going in different directions.
+ - Hypothesis: Adding velocity as input to the model will make the base of the decision making stronger.
+ - Added velocity (in x, y, and z) as an input.
+ - Result:
+	- Learned to steer right all the time, even with probability choosing.
+ - Conclusion:
+	- We see no difference in the decision making.
+	
