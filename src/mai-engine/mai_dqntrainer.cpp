@@ -157,7 +157,7 @@ void MAIDQNTrainer::optimiseModel() {
 	stream.open("loss.txt", std::ios::app);
 	stream << m_stepsDone << "," << loss.item<float>() << "\n";
 	stream.close();
-	std::cout << "Loss:\n" << loss << "\n";
+	//std::cout << "Loss:\n" << loss << "\n";
 
 	//std::cout << m_policyNet->forward(stateTensor) << "\n";
 	m_optimiser->zero_grad();
@@ -311,14 +311,14 @@ void MAIDQNTrainer::addFakeReplayData() {
 		replayMemory.states.push_back({ randomDownTrack, randomToCenter, 0.0f });
 		replayMemory.nextStates.push_back({ randomDownTrack + 1, randomToCenter, 0.0f });
 		if (i % 2 == 0) {
-			replayMemory.actionIndices.push_back(1);
+			replayMemory.actionIndices.push_back(0);
 			replayMemory.rewards.push_back(10);
 		}
 		else {
 			int randAction;
 			do {
 				randAction = rand() % m_policyNet->getNumActions();
-			} while (randAction == 1);
+			} while (randAction == 0);
 			replayMemory.actionIndices.push_back(randAction);
 			replayMemory.rewards.push_back(0);
 		}
