@@ -24,6 +24,10 @@ private:
 	std::shared_ptr<torch::nn::LinearImpl> m_hiddenLayerOne;
 	std::shared_ptr<torch::nn::LinearImpl> m_hiddenLayerTwo;
 	std::shared_ptr<torch::nn::LinearImpl> m_outLayer;
+
+	std::shared_ptr<torch::nn::BatchNormImpl> m_batchNorm1;
+	std::shared_ptr<torch::nn::BatchNormImpl> m_batchNorm2;
+	std::shared_ptr<torch::nn::BatchNormImpl> m_batchNorm3;
 public:
 	MAIDQNModel();
 	//MAIDQNModel(int kartID);

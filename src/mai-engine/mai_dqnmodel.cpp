@@ -11,6 +11,7 @@
 #include <tracks/track.hpp>
 
 #define NUM_INPUTS 6
+#define USE_NORM false
 
 MAIDQNModel::MAIDQNModel()
 {
@@ -24,9 +25,13 @@ MAIDQNModel::MAIDQNModel()
 
 	int inputs = UserConfigParams::m_mai_stack_observations ? NUM_INPUTS * UserConfigParams::m_mai_num_observations : NUM_INPUTS;
 	m_inLayer = m_module->register_module("inLayer", torch::nn::Linear(inputs, 128));
+	if (USE_NORM) m_batchNorm1 = m_module->register_module("batchNorm1", torch::nn::BatchNorm(128));
 	m_hiddenLayerOne = m_module->register_module("hiddenLayerOne", torch::nn::Linear(128, 128));
+	if (USE_NORM) m_batchNorm2 = m_module->register_module("batchNorm2", torch::nn::BatchNorm(128));
 	m_hiddenLayerTwo = m_module->register_module("hiddenLayerTwo", torch::nn::Linear(128, 128));
+	if (USE_NORM) m_batchNorm3 = m_module->register_module("batchNorm3", torch::nn::BatchNorm(128));
 	m_outLayer = m_module->register_module("outLayer", torch::nn::Linear(128, /*Number of actions*/m_actions.size()));
+	
 	m_kart = nullptr;
 	stateHistory = std::vector<StateStruct>();
 	//oldestStateHist = 0;
@@ -153,10 +158,16 @@ int MAIDQNModel::chooseProbability(torch::TensorAccessor<float, 1, torch::Defaul
 }
 
 torch::Tensor MAIDQNModel::forward(torch::Tensor x, int dim) {
-	x = torch::relu(m_inLayer->forward(x)); // Maybe not ReLU?
-	x = torch::relu(m_hiddenLayerOne->forward(x));
-	x = torch::relu(m_hiddenLayerTwo->forward(x));
-	x = torch::softmax(m_outLayer->forward(x), /*dim=*/dim);
+	x = m_inLayer->forward(x);
+	if (USE_NORM) x = m_batchNorm1->forward(x);
+	x = torch::relu(x); // Maybe not ReLU?
+	x = m_hiddenLayerOne->forward(x);
+	if (USE_NORM) x = m_batchNorm2->forward(x);
+	x = torch::relu(x);
+	x = m_hiddenLayerTwo->forward(x);
+	if (USE_NORM) x = m_batchNorm3->forward(x);
+	x = torch::relu(x);
+	return torch::softmax(m_outLayer->forward(x), /*dim=*/dim);
 	return x;
 }
 
@@ -189,8 +200,15 @@ torch::Tensor MAIDQNModel::pseudoForward(StateStruct state)
 
 	//std::cout << t << "\n";
 
-	t = torch::relu(m_inLayer->forward(t)); // Maybe not ReLU?
-	t = torch::relu(m_hiddenLayerOne->forward(t));
-	t = torch::relu(m_hiddenLayerTwo->forward(t));
+	t = m_inLayer->forward(t);
+	if (USE_NORM) t = m_batchNorm1->forward(t);
+	t = torch::relu(t); // Maybe not ReLU?
+	t = m_hiddenLayerOne->forward(t);
+	if (USE_NORM) t = m_batchNorm2->forward(t);
+	t = torch::relu(t);
+	t = m_hiddenLayerTwo->forward(t);
+	if (USE_NORM) t = m_batchNorm3->forward(t);
+	t = torch::relu(t);
 	return torch::softmax(m_outLayer->forward(t), /*dim=*/0);
+	return t;
 }
