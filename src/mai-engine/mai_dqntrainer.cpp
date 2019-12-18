@@ -16,9 +16,11 @@
 #define GAMMA 0.999
 #define EPS_START 1.0
 #define EPS_END 0.05
-#define EPS_DECAY 100000
+#define EPS_DECAY 400000
 #define TARGET_UPDATE 10
 #define SAVE_MODEL 500
+#define END_RACE 960000
+#define RESTART_RACE 2400
 
 #define RESETRACE true
 #define REALDATA true
@@ -211,13 +213,13 @@ std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
 	if (world->getPhase() != world->RACE_PHASE && world->getPhase() != world->GO_PHASE) return { PA_NITRO };
 	StandardRace* srWorld = dynamic_cast<StandardRace*>(world);
 	if(RESETRACE){
-        if (m_runOnceIteration % 7200 == 0 && m_runOnceIteration != 0) {
+        if (m_runOnceIteration % RESTART_RACE == 0 && m_runOnceIteration != 0) {
             m_runOnceIteration++;
             std::cout << "\nRestarting race\n";
             srWorld->reset(true);
             return m_policyNet->getAction(0);
         }
-        if (m_runOnceIteration >= 240000) {
+        if (m_runOnceIteration >= END_RACE) {
 			// Save rewards
 			std::ofstream stream;
 			stream.open(rewardName, std::ios::app);
