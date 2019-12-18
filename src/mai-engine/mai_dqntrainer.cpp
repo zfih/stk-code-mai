@@ -23,8 +23,9 @@
 #define RESETRACE true
 #define REALDATA true
 
-const std::string modelName = "test.pt";
-const std::string lossName = "loss.txt";
+const std::string modelName = "GetCenterAndForward.pt";
+const std::string lossName = "GetCenterAndForwardLoss.txt";
+const std::string rewardName = "GetCenterAndForwardReward.txt";
 
 inline bool fileExists(const std::string& name) {
 	struct stat buffer;
@@ -217,6 +218,14 @@ std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
             return m_policyNet->getAction(0);
         }
         if (m_runOnceIteration >= 240000) {
+			// Save rewards
+			std::ofstream stream;
+			stream.open(rewardName, std::ios::app);
+			for (int i = 0; i < replayMemory.rewards.size(); i++) {
+				stream << i << "," << replayMemory.rewards[i] << "\n";
+			}
+			stream.close();
+			// Exit race
             srWorld->scheduleExitRace();
             std::cout << "\nExiting race.\n";
         }
@@ -264,7 +273,7 @@ std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
         replayMemory.actionIndices.push_back(m_lastActionIndex);
 		replayMemory.nextStates.push_back(state);
 		float reward = state.downTrack - m_lastState.downTrack;
-		//float reward = fabsf(m_lastState.distToMid) - fabsf(state.distToMid) > 0 ? 10.0f : -10.0f;
+		reward += fabsf(m_lastState.distToMid) - fabsf(state.distToMid) /*> 0 ? 10.0f : -10.0f*/;
         replayMemory.rewards.push_back(reward);
         //std::cout << replayMemory.rewards.back();
 	}
