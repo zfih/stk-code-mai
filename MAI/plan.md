@@ -27,8 +27,9 @@
 * Experiements needs finishing and touchup - see todos in code
 * The last 3 sections and references missing
 * Graphs for reward and loss for the experiments
-* 
-
+* In method section: Reward function and What? Why? How? about reward
+* In method section: Network architecture, why, tie in with Experiments
+* Intro to experiments.
 
 ## Thursday 19/12
 * Code freeze, only report
@@ -36,4 +37,5 @@
 
 ## Friday 20/12
 * Final report stuff.
+* If time write github readme detailing how to download and run game
 * 14:00 - Hand-in
