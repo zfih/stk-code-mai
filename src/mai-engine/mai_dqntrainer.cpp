@@ -154,7 +154,7 @@ void MAIDQNTrainer::optimiseModel() {
 	auto loss = torch::smooth_l1_loss(stateActionValues, expectedStateValues.unsqueeze(1));
 	
 	std::ofstream stream;
-	stream.open("loss.txt", std::ios::app);
+	stream.open(lossName, std::ios::app);
 	stream << m_stepsDone << "," << loss.item<float>() << "\n";
 	stream.close();
 	//std::cout << "Loss:\n" << loss << "\n";
