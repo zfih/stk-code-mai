@@ -242,8 +242,8 @@ std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
 	if (UserConfigParams::m_mai_stack_observations) {
 		std::vector<StateStruct> stateVector = std::vector<StateStruct>();
 		if (replayMemory.nextStates.size() > UserConfigParams::m_mai_num_observations) {
-			for (int i = UserConfigParams::m_mai_num_observations - 2; i >= 0; i--) {
-				stateVector.push_back(replayMemory.nextStates[i]);
+			for (int i = UserConfigParams::m_mai_num_observations - 1; i >= 1; i--) {
+				stateVector.push_back(replayMemory.nextStates[replayMemory.nextStates.size() - i]);
 			}
 			stateVector.push_back(state);
 		}
@@ -263,7 +263,9 @@ std::vector<PlayerAction> MAIDQNTrainer::runOnce() {
         replayMemory.states.push_back(m_lastState);
         replayMemory.actionIndices.push_back(m_lastActionIndex);
 		replayMemory.nextStates.push_back(state);
-        replayMemory.rewards.push_back(state.downTrack - m_lastState.downTrack);
+		float reward = state.downTrack - m_lastState.downTrack;
+		//float reward = fabsf(m_lastState.distToMid) - fabsf(state.distToMid) > 0 ? 10.0f : -10.0f;
+        replayMemory.rewards.push_back(reward);
         //std::cout << replayMemory.rewards.back();
 	}
 
