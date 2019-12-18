@@ -16,8 +16,19 @@
 ## Wednesday 18/12
 * Train and evaluate go to middle agent and go to middle + forward agent
 * Write result and conclusion for middle and middle forward experiment
-* Plan out report exactly and figure out exactly what is there and what is messing
+* Plan out report exactly and figure out exactly what is there and what is missing
 * Overall report writing
+
+### Report things to be done
+* More introduction, short about DQN and other things we use.
+* Problem statement
+* Section 3.0, 3.1, 3.2 needs a look at (old)
+* Read Background and method and look for overlap
+* Experiements needs finishing and touchup - see todos in code
+* The last 3 sections and references missing
+* Graphs for reward and loss for the experiments
+* 
+
 
 ## Thursday 19/12
 * Code freeze, only report
