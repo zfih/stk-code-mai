@@ -6,22 +6,42 @@
 #define SUPERTUXKART_MAI_DQNMODEL_HPP
 
 #include "mai_model.hpp"
+#include "karts/abstract_kart.hpp"
 
-class MAIDQNModel : public MAIModel, public torch::nn::Module {
+class MAIDQNModel : public MAIModel/*, public torch::nn::Module*/ {
 private:
-	int m_kartID;
-	std::vector<PlayerAction> m_actions;
+	int chooseBest(torch::TensorAccessor<float, 1, torch::DefaultPtrTraits, int64_t> theVals);
+	int chooseProbability(torch::TensorAccessor<float, 1, torch::DefaultPtrTraits, int64_t> theVals);
 
+	int m_kartID;
+	AbstractKart* m_kart;
+	std::vector<std::vector<PlayerAction>> m_actions;
+	std::vector<StateStruct> stateHistory;
+	//int oldestStateHist;
+
+	torch::nn::Module *m_module;
 	std::shared_ptr<torch::nn::LinearImpl> m_inLayer;
 	std::shared_ptr<torch::nn::LinearImpl> m_hiddenLayerOne;
 	std::shared_ptr<torch::nn::LinearImpl> m_hiddenLayerTwo;
 	std::shared_ptr<torch::nn::LinearImpl> m_outLayer;
+
+	std::shared_ptr<torch::nn::BatchNormImpl> m_batchNorm1;
+	std::shared_ptr<torch::nn::BatchNormImpl> m_batchNorm2;
+	std::shared_ptr<torch::nn::BatchNormImpl> m_batchNorm3;
 public:
-	MAIDQNModel(int kartID);
+	MAIDQNModel();
+	//MAIDQNModel(int kartID);
 	~MAIDQNModel();
 
-	PlayerAction getAction(/*State state*/);
+	torch::nn::Module *getModule();
+	std::vector<PlayerAction> getAction(/*State state*/);
+	int getAction(StateStruct state);
+	int getActionStacked(std::vector<StateStruct> states);
+	torch::Tensor pseudoForward(StateStruct state);
+	torch::Tensor forward(torch::Tensor x, int dim);
 	int getKartID();
+	int getNumActions();
+	std::vector<PlayerAction> getAction(int index);
 };
 
 #endif //SUPERTUXKART_MAI_MDQNODEL_HPP

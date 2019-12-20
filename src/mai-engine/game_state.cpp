@@ -6,14 +6,14 @@
 #include "mai_engine.hpp"
 
 GameState::GameState(World *world){
-    m_world = World::getWorld();
+    m_world = world;
     std::cout << "I GOT MADE!" << std::endl;
     init();
 }
 
 GameState::GameState(const GameState &state) { // Copy constructor
     std::cout << "I GOT COPIED!" << std::endl;
-	m_world				= state.m_world;
+    m_world             = state.m_world;
     m_transform_events  = state.m_transform_events;
     m_physic_info       = state.m_physic_info;
     m_bonus_info        = state.m_bonus_info;
@@ -64,6 +64,8 @@ void GameState::reset() {
 
 void GameState::update() {
     if (m_incorrect_replay || m_complete_replay) return;
+
+    m_world = World::getWorld();
 
     const bool single_player = race_manager->getNumPlayers() == 1;
     unsigned int num_karts = m_world->getNumKarts();
@@ -148,51 +150,6 @@ void GameState::update() {
         m_complete_replay = true;
     }
 }   // update
-
-
-void GameState::makeStateCurrentState() {
-
-	unsigned int num_karts = m_world->getNumKarts();
-
-	for (unsigned int i = 0; i < num_karts; i++)
-	{
-		AbstractKart* kart = m_world->getKart(i);
-
-        TransformEvent p      = m_transform_events[i][m_count_transforms[i]-1];
-        PhysicInfo q          = m_physic_info[i][m_count_transforms[i]-1];
-        BonusInfo b           = m_bonus_info[i][m_count_transforms[i]-1];
-        KartReplayEvent r     = m_kart_replay_event[i][m_count_transforms[i]-1];
-
-        m_world->setTime(p.m_time);
-
-        kart->setXYZ(p.m_transform.getOrigin());
-        kart->setRotation(p.m_transform.getRotation());
-
-        kart->setSpeed(q.m_speed);
-        kart->getControls().setSteer(q.m_steer);
-
-        const int num_wheels = kart->getVehicle()->getNumWheels();
-        for (int j = 0; j < 4; j++)
-        {
-            if (j > num_wheels || num_wheels == 0)
-                q.m_suspension_length[j] = 0.0f;
-            else
-            {
-                kart->getVehicle()->getWheelInfo(j).m_raycastInfo.m_suspensionLength = q.m_suspension_length[j];
-            }
-        }
-
-        kart->getSkidding()->setSkidState(q.m_skidding_state);
-
-        kart->getAttachment()->set(b.m_attachment);
-        kart->setEnergy(b.m_nitro_amount);
-        kart->getPowerup()->set(b.m_item_type, b.m_item_amount);
-	}
-}
-
-GameState *GameState::copyGameState(){
-    return new GameState(*this);
-}
 
 int GameState::enumToCode(Attachment::AttachmentType type)
 {
