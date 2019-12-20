@@ -19,15 +19,16 @@
 * Plan out report exactly and figure out exactly what is there and what is missing
 * Overall report writing
 
-### Report things to be done
-* Experiements needs finishing and touchup - see todos in code
-* The last 3 sections and references missing
-* Abstract missing
-* Graphs for reward and loss for the experiments
-
 ## Thursday 19/12
 * Code freeze, only report
 * Finish report, only minor issues left
+
+### Report things to be done
+* The last 3 sections and references missing
+* Abstract missing
+* Graphs for reward and loss for the experiments
+* Epsilon greedy and the settings for training
+
 
 ## Friday 20/12
 * Final report stuff.
